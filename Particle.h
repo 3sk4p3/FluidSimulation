@@ -19,19 +19,31 @@ private:
 	glm::vec2 m_StartPos;
 	Vertex  m_Vertex[4];
 	glm::vec2 m_VelocityXY;//predkosc
-	glm::vec2 m_AccelerationXY;//przyspeiszenie
-	float m_Energy;
-	float m_SpringEnergy;
-	float m_K;
 	float m_Size;
+	float m_Mass;
+	float m_Acceleration;
+	float m_Energy;
+	float m_CurrentHeight;
+	float m_PreviousHeight;
+	float m_CurrentVelocity;
+	float m_PreviousVelocity;
+	float m_k;
+	float m_CurrMax;
+	glm::vec2 m_CurrentPosition;
+
+	bool m_Dir;
+	
 
 public:
-	const float getE() { return m_SpringEnergy; }
+	const float getCurrentVelocity();
+	const void getE() {
+		std::cout << "x:" << m_CurrentPosition.x << " y:" << m_CurrentPosition.y << " Acceleration:" << m_Acceleration
+			<< " Current Velocity :" <<m_CurrentVelocity<<" Curr Max:"<<m_CurrMax<< std::endl;
+	}
 	Particle(glm::vec2 StartPos);
 	~Particle();
 	void Update();
 	const Vertex* GetBegVertex() { return m_Vertex; }
-	const Vertex* GetEndVertex() { return &m_Vertex[3]; }
 	const glm::vec2 GetCastedShadowX() { return glm::vec2(m_StartPos.x + m_VelocityXY.x, m_StartPos.x + m_VelocityXY.x + m_Size); }
 	const glm::vec2 GetCastedShadowY() { return glm::vec2(m_StartPos.y + m_VelocityXY.y, m_StartPos.y + m_VelocityXY.y + m_Size); }
 	bool operator < (const Particle& Part) const

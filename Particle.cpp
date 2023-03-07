@@ -3,21 +3,25 @@
 
 
 
-Particle::Particle(glm::vec2 StartPos)
-	:m_StartPos(StartPos), m_Size(1.0f),m_K(0.01),m_SpringEnergy(0.0f)
+const float Particle::getCurrentVelocity()
 {
-	m_VelocityXY = { 1.0f,1.0f };
-	std::random_device rd;
-	std::mt19937 mt(rd());
-	std::uniform_real_distribution<double> distinit(0.0001, 0.08);
-	std::uniform_real_distribution<float> distinit2(2.0, 12.0);
+	return (float)sqrt(2 * 10.0f*(m_PreviousHeight - m_CurrentHeight) + pow(m_PreviousVelocity, 2));
+}
 
-	float height = distinit2(mt);
-	m_Energy = height * 10;//CHYBA GIT
-	height = -distinit(mt);
-	m_AccelerationXY = { 0.0f,height};	
+Particle::Particle(glm::vec2 StartPos)
+	:m_StartPos(StartPos), m_Size(1.0f),m_Dir(false),m_Mass(1.0f),m_CurrentVelocity(0.0f),m_CurrentHeight(StartPos.y)
+	,m_k(0.9f),m_CurrMax(StartPos.y)
+{
+
+	m_VelocityXY = { 0.0f,0.0f };
 
 
+
+	m_CurrentPosition.x = m_StartPos.x;
+	m_CurrentPosition.y = m_StartPos.y;
+	m_Energy = m_Mass *0.1f;
+	m_Acceleration = 0.0005f*m_Energy / m_Mass;
+	
 
 	
 
@@ -30,42 +34,70 @@ Particle::~Particle()
 
 void Particle::Update()
 {
-	bool flipped = false;
 
+	
+
+	m_PreviousHeight = m_CurrentHeight;
+	m_PreviousVelocity = m_CurrentVelocity;
+	m_CurrentHeight = m_CurrentPosition.y;
+	m_CurrentVelocity = getCurrentVelocity();
 
 	//prawo i lewo
-	if (m_VelocityXY.x + m_StartPos.x> 14.0f || m_VelocityXY.x + m_StartPos.x < 0.0f)
-	{
-		
-		m_AccelerationXY.x= -m_AccelerationXY.x;	
+	if (m_CurrentPosition.x> 14.0f || m_CurrentPosition.x < 0.0f)
+	{	
 	}
 	//gora i dol
-	if (flipped==false&&(m_VelocityXY.y + m_StartPos.y > 14.0f || m_VelocityXY.y + m_StartPos.y< 0.0f))
+	if (( m_CurrentPosition.y < 0.0f|| m_CurrentPosition.y > 14.0f ))
 	{
-		flipped = true;
-		m_AccelerationXY.y = -m_AccelerationXY.y;//zmiana kierunkiu
+		
+		if (m_Dir == true&&m_CurrentPosition.y>0.0f)m_Dir = false;
+		else if(m_Dir == false && m_CurrentPosition.y < 0.0f) m_Dir = true;
+		
+		std::cout << "ODBICIE:"<<m_Dir << std::endl;
 	}
-	if (flipped == false && m_SpringEnergy < 0)
+	
+
+
+	if (m_CurrMax > 0.1f)
 	{
-		flipped = true;
-		m_AccelerationXY = -m_AccelerationXY;
+
+
+
+		if (m_Dir) {//do gory leci
+			if (m_CurrentPosition.y > m_k * m_CurrMax)
+			{
+				m_CurrentVelocity *= m_k;
+				m_CurrMax *= m_k;
+				if (m_Dir == true)m_Dir = false;
+				else m_Dir = true;
+
+				std::cout << "ODBICIE:" << m_Dir << std::endl;
+
+			}
+			else {
+
+				m_CurrentVelocity -= m_Acceleration * 0.1;
+				m_CurrentPosition.y += m_CurrentVelocity * 0.05;
+				CreateQuad(this, float(m_CurrentPosition.x), float(m_CurrentPosition.y), 1.0f, m_Size);
+				std::cout << "do GORY" << std::endl;
+			}
+		}
+		else {//spada
+
+
+			m_CurrentVelocity += m_Acceleration * 0.1;
+			m_CurrentPosition.y -= m_CurrentVelocity * 0.15;
+			CreateQuad(this, float(m_CurrentPosition.x), float(m_CurrentPosition.y), 1.0f, m_Size);
+			std::cout << "SPADA" << std::endl;
+		}
+		
 	}
-	m_Energy -= 0.1;
-	if (flipped)
-	{
-		m_K = -0.02;
-	}
-	else m_K = 0.01;
-	m_SpringEnergy += m_K;
-	//predkosc = predkosc+ przyspieszenie
-	m_VelocityXY.x += m_AccelerationXY.x;
-	m_VelocityXY.y += m_AccelerationXY.y;
-	if (m_Energy > 0)CreateQuad(this, float(m_StartPos.x + m_VelocityXY.x), float(m_StartPos.y + m_VelocityXY.y), 1.0f,m_Size);
+	
 
 
+}
 
 
-}						   
 
 
 void CreateQuad(Particle* target, float x, float y, float textureID,float size)
@@ -152,14 +184,26 @@ void SweepAndPrune(std::vector<Particle> &Particles, size_t size)
 				unsigned int Dir = Direction(*result[i][k], *result[i][j]);
 				if (Dir == 3)
 				{
-					result[i][j]->m_AccelerationXY.x = -result[i][j]->m_AccelerationXY.x;
-					result[i][k]->m_AccelerationXY.x = -result[i][k]->m_AccelerationXY.x;
+					if (result[i][j]->m_Dir == true)result[i][j]->m_Dir = false;
+					else result[i][j]->m_Dir = true;
+					if (result[i][k]->m_Dir == true)result[i][k]->m_Dir = false;
+					else result[i][k]->m_Dir = true;
+
+					std::cout << "ODBICIE:" << result[i][j]->m_Dir << std::endl;
+
+				/*	result[i][j]->m_AccelerationXY.x = -result[i][j]->m_AccelerationXY.x;
+					result[i][k]->m_AccelerationXY.x = -result[i][k]->m_AccelerationXY.x;*/
 
 				}
 				else {
+					if (result[i][j]->m_Dir == true)result[i][j]->m_Dir = false;
+					else result[i][j]->m_Dir = true;
 
-					result[i][j]->m_AccelerationXY.y = -result[i][j]->m_AccelerationXY.y;
-					result[i][k]->m_AccelerationXY.y = -result[i][k]->m_AccelerationXY.y;
+					if (result[i][k]->m_Dir == true)result[i][k]->m_Dir = false;
+					else result[i][k]->m_Dir = true;
+
+					//result[i][j]->m_AccelerationXY.y = -result[i][j]->m_AccelerationXY.y;
+					//result[i][k]->m_AccelerationXY.y = -result[i][k]->m_AccelerationXY.y;
 				    }
 
 	

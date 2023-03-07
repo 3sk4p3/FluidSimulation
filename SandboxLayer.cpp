@@ -12,7 +12,7 @@ const size_t MaxParticleIndexCount = NumsofParticles* 6;
 
 
 SandboxLayer::SandboxLayer()
-	: m_CameraController(16.0f / 9.0f)
+	: m_CameraController(16.0f / 9.0f,true)
 
 {
 
@@ -99,7 +99,7 @@ void SandboxLayer::OnAttach()
 
 	std::random_device rd;
 	std::mt19937 mt(rd());
-	std::uniform_real_distribution<double> dist(0.0, 13.0);
+	std::uniform_real_distribution<float> dist(1.0f, 14.0f);
 	
 	m_Particles.reserve(NumsofParticles);
 	for (size_t i = 0; i < NumsofParticles; ++i)
@@ -174,11 +174,9 @@ void SandboxLayer::OnEvent(Event& event)
 {
 	m_CameraController.OnEvent(event);
 
+	
 	// Events here
 }
-
-
-
 
 static Vertex* CreateLine(Vertex* target, glm::vec2 topL, glm::vec2 topR,glm::vec2 botR, glm::vec2 botL)
 {
@@ -221,7 +219,7 @@ static Vertex* CreateLine(Vertex* target, glm::vec2 topL, glm::vec2 topR,glm::ve
 void SandboxLayer::OnUpdate(Timestep ts)
 {
 	m_CameraController.OnUpdate(ts);
-
+	
 
 
 
@@ -261,7 +259,7 @@ void SandboxLayer::OnUpdate(Timestep ts)
 	SweepAndPrune(m_Particles, NumsofParticles);
 	for (auto& i : m_Particles)
 	{
-		std::cout << mp->getE()<<std::endl;
+		mp->getE();
 		i.Update();
 
 	}
@@ -333,9 +331,11 @@ void SandboxLayer::OnUpdate(Timestep ts)
 
 void SandboxLayer::OnImGuiRender()
 {
-	//ImGui::Begin("Controls");
-	//ImGui::DragFloat2("Quad Position", m_QuadPosition, 0.1f);
-	//ImGui::End();
+
+
+	/*ImGui::Begin("Controls");
+	ImGui::DragFloat2("Quad Position", m_QuadPosition, 0.1f);
+	ImGui::End();*/
 
 	// ImGui here
 }

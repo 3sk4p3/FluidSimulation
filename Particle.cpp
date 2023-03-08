@@ -10,7 +10,7 @@ const float Particle::getCurrentVelocity()
 
 Particle::Particle(glm::vec2 StartPos)
 	:m_StartPos(StartPos), m_Size(1.0f),m_Dir(false),m_Mass(1.0f),m_CurrentVelocity(0.0f),m_CurrentHeight(StartPos.y)
-	,m_k(0.9f),m_CurrMax(StartPos.y)
+	,m_k(0.8f),m_CurrMax(StartPos.y)
 {
 
 	m_VelocityXY = { 0.0f,0.0f };
@@ -20,7 +20,7 @@ Particle::Particle(glm::vec2 StartPos)
 	m_CurrentPosition.x = m_StartPos.x;
 	m_CurrentPosition.y = m_StartPos.y;
 	m_Energy = m_Mass *0.1f;
-	m_Acceleration = 0.0005f*m_Energy / m_Mass;
+	m_Acceleration = 0.000009f*m_Energy / m_Mass;
 	
 
 	
@@ -32,7 +32,7 @@ Particle::~Particle()
 {
 }
 
-void Particle::Update()
+void Particle::Update(float ts)
 {
 
 	
@@ -71,22 +71,22 @@ void Particle::Update()
 				if (m_Dir == true)m_Dir = false;
 				else m_Dir = true;
 
-				std::cout << "ODBICIE:" << m_Dir << std::endl;
+				std::cout << "SPADEK:" << m_Dir << std::endl;
 
 			}
 			else {
 
-				m_CurrentVelocity -= m_Acceleration * 0.1;
-				m_CurrentPosition.y += m_CurrentVelocity * 0.05;
+				m_CurrentVelocity -= m_Acceleration * 0.15;
+				m_CurrentPosition.y += m_CurrentVelocity *0.05 ;
 				CreateQuad(this, float(m_CurrentPosition.x), float(m_CurrentPosition.y), 1.0f, m_Size);
 				std::cout << "do GORY" << std::endl;
 			}
 		}
 		else {//spada
+			
 
-
-			m_CurrentVelocity += m_Acceleration * 0.1;
-			m_CurrentPosition.y -= m_CurrentVelocity * 0.15;
+			m_CurrentVelocity += m_Acceleration *0.15;
+			m_CurrentPosition.y -= m_CurrentVelocity * 0.05;
 			CreateQuad(this, float(m_CurrentPosition.x), float(m_CurrentPosition.y), 1.0f, m_Size);
 			std::cout << "SPADA" << std::endl;
 		}
@@ -184,12 +184,7 @@ void SweepAndPrune(std::vector<Particle> &Particles, size_t size)
 				unsigned int Dir = Direction(*result[i][k], *result[i][j]);
 				if (Dir == 3)
 				{
-					if (result[i][j]->m_Dir == true)result[i][j]->m_Dir = false;
-					else result[i][j]->m_Dir = true;
-					if (result[i][k]->m_Dir == true)result[i][k]->m_Dir = false;
-					else result[i][k]->m_Dir = true;
-
-					std::cout << "ODBICIE:" << result[i][j]->m_Dir << std::endl;
+		
 
 				/*	result[i][j]->m_AccelerationXY.x = -result[i][j]->m_AccelerationXY.x;
 					result[i][k]->m_AccelerationXY.x = -result[i][k]->m_AccelerationXY.x;*/
@@ -198,10 +193,21 @@ void SweepAndPrune(std::vector<Particle> &Particles, size_t size)
 				else {
 					if (result[i][j]->m_Dir == true)result[i][j]->m_Dir = false;
 					else result[i][j]->m_Dir = true;
+					//result[i][j]->m_CurrentPosition.y += result[i][j]->m_CurrentVelocity * 0.2;
+
 
 					if (result[i][k]->m_Dir == true)result[i][k]->m_Dir = false;
 					else result[i][k]->m_Dir = true;
-
+					//result[i][k]->m_CurrentPosition.y += result[i][k]->m_CurrentVelocity * 0.2;
+					std::cout << " S&P ODBICIE:" << result[i][j]->m_Dir << std::endl;
+					std::cout << "x:" << result[i][j]->m_CurrentPosition.x << " y:" << result[i][j]->m_CurrentPosition.y << " Acceleration:" << result[i][j]->m_Acceleration
+						<< " Current Velocity :" << result[i][j]->m_CurrentVelocity << " Curr Max:" << result[i][j]->m_CurrMax << std::endl;
+					float buf = result[i][j]->m_CurrentVelocity;
+					result[i][j]->m_CurrentVelocity= result[i][k]->m_CurrentVelocity;
+					result[i][k]->m_CurrentVelocity=buf;
+					buf = result[i][j]->m_CurrMax;
+					result[i][j]->m_CurrMax = result[i][k]->m_CurrMax;
+					result[i][k]->m_CurrMax = buf;
 					//result[i][j]->m_AccelerationXY.y = -result[i][j]->m_AccelerationXY.y;
 					//result[i][k]->m_AccelerationXY.y = -result[i][k]->m_AccelerationXY.y;
 				    }

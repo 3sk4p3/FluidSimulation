@@ -3,7 +3,10 @@
 #include <random>
 #include <vector>
 #include <cmath>
-
+struct Vec2
+{
+	float x, y;
+};
 struct Vertex
 {
 	glm::vec3 Position;
@@ -29,9 +32,9 @@ private:
 	float m_PreviousVelocity;
 	float m_k;
 	float m_CurrMax;
-	glm::vec2 m_CurrentPosition;
-
 	bool m_Dir;
+	Vec2 m_CurrentPosition;
+
 	
 
 public:
@@ -42,10 +45,10 @@ public:
 	}
 	Particle(glm::vec2 StartPos);
 	~Particle();
-	void Update();
+	void Update(float ts);
 	const Vertex* GetBegVertex() { return m_Vertex; }
-	const glm::vec2 GetCastedShadowX() { return glm::vec2(m_StartPos.x + m_VelocityXY.x, m_StartPos.x + m_VelocityXY.x + m_Size); }
-	const glm::vec2 GetCastedShadowY() { return glm::vec2(m_StartPos.y + m_VelocityXY.y, m_StartPos.y + m_VelocityXY.y + m_Size); }
+	const glm::vec2 GetCastedShadowX() { return glm::vec2(m_CurrentPosition.x, m_CurrentPosition.x + m_Size); }
+	const glm::vec2 GetCastedShadowY() { return glm::vec2(m_CurrentPosition.y, m_CurrentPosition.y+ m_Size); }
 	bool operator < (const Particle& Part) const
 	{
 		return ((m_StartPos.x+m_VelocityXY.x) < (Part.m_StartPos.x+Part.m_VelocityXY.x));

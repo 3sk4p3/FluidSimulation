@@ -259,8 +259,9 @@ void SandboxLayer::OnUpdate(Timestep ts)
 	SweepAndPrune(m_Particles, NumsofParticles);
 	for (auto& i : m_Particles)
 	{
+		
 		mp->getE();
-		i.Update();
+		i.Update(ts.GetMilliseconds());
 
 	}
 	glDrawElements(GL_TRIANGLES, MaxParticleIndexCount, GL_UNSIGNED_INT, nullptr);

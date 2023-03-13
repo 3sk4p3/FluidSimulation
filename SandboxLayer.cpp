@@ -2,7 +2,7 @@
 #include <algorithm>
 using namespace GLCore;
 using namespace GLCore::Utils;
-const size_t NumsofParticles = 5;
+const size_t NumsofParticles = 325;
 const size_t MaxParticleVertexCount = NumsofParticles * 4;
 const size_t MaxParticleIndexCount = NumsofParticles* 6;
 
@@ -100,11 +100,30 @@ void SandboxLayer::OnAttach()
 	std::random_device rd;
 	std::mt19937 mt(rd());
 	std::uniform_real_distribution<float> dist(1.0f, 14.0f);
-	
+
+	float _x = 0.45f;
+	float _y = 14.0f;
+	bool direction = false;
 	m_Particles.reserve(NumsofParticles);
 	for (size_t i = 0; i < NumsofParticles; ++i)
 	{
-		m_Particles.push_back(Particle({ dist(mt),dist(mt) }));
+		m_Particles.push_back(Particle({ _x ,_y}));
+		_x += 1.0f;
+		if (_x>=14.0f) 
+		{ 
+			_y -= 0.6f;
+			if (direction)
+			{
+				direction = !direction;
+			_x = 0.45f;
+			}
+			else
+			{
+				direction = !direction;
+				_x = 0.0f;
+			}
+		}
+
 	}
 	
 	
@@ -260,8 +279,8 @@ void SandboxLayer::OnUpdate(Timestep ts)
 	for (auto& i : m_Particles)
 	{
 		
-		mp->getE();
-		i.Update(ts.GetMilliseconds());
+		//mp->getE();
+		i.Update();
 
 	}
 	glDrawElements(GL_TRIANGLES, MaxParticleIndexCount, GL_UNSIGNED_INT, nullptr);

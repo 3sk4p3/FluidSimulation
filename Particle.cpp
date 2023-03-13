@@ -5,23 +5,27 @@
 
 const float Particle::getCurrentVelocity()
 {
-	return (float)sqrt(2 * 10.0f*(m_PreviousHeight - m_CurrentHeight) + pow(m_PreviousVelocity, 2));
+	return sqrt(abs(2*(m_PreviousHeight - m_CurrentHeight) + pow(m_PreviousVelocity,2)));
 }
 
+
+
 Particle::Particle(glm::vec2 StartPos)
-	:m_StartPos(StartPos), m_Size(1.0f),m_Dir(false),m_Mass(1.0f),m_CurrentVelocity(0.0f),m_CurrentHeight(StartPos.y)
-	,m_k(0.8f),m_CurrMax(StartPos.y)
+	:m_StartPos(StartPos), m_Size(0.5f),m_DirY(false),m_Mass(1.0f),m_CurrentHeight(StartPos.y)
+	,m_k(0.99f),m_CurrMax(StartPos.y)
 {
 
-	m_VelocityXY = { 0.0f,0.0f };
 
 
 
 	m_CurrentPosition.x = m_StartPos.x;
 	m_CurrentPosition.y = m_StartPos.y;
-	m_Energy = m_Mass *0.1f;
-	m_Acceleration = 0.000009f*m_Energy / m_Mass;
-	
+	m_Energy = m_Mass ;
+	//przyspieszenie na obu osiach
+	m_Acceleration = { 0.0f,1.0f };
+	//predkosc na obu osiach
+	m_CurrentVelocity = { 0.0f,0.0f };
+
 
 	
 
@@ -30,66 +34,96 @@ Particle::Particle(glm::vec2 StartPos)
 
 Particle::~Particle()
 {
+	//czy tu nie powinno czegows byc?
 }
 
-void Particle::Update(float ts)
+void Particle::Update()
 {
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~TODO~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	//box ma byc na zmiennych, moze niech sie rozszerza im wiecej jest kulek???
 
-	
 
+	//ustawiamy poprzedni stan czasteczki na ten ktory wlasnie mamy obecnie
 	m_PreviousHeight = m_CurrentHeight;
-	m_PreviousVelocity = m_CurrentVelocity;
-	m_CurrentHeight = m_CurrentPosition.y;
-	m_CurrentVelocity = getCurrentVelocity();
+	m_PreviousVelocity = m_CurrentVelocity.y;
 
-	//prawo i lewo
-	if (m_CurrentPosition.x> 14.0f || m_CurrentPosition.x < 0.0f)
-	{	
-	}
-	//gora i dol
-	if (( m_CurrentPosition.y < 0.0f|| m_CurrentPosition.y > 14.0f ))
+	//zmieniamy obecny stan czasteczki os y
+	m_CurrentHeight = m_CurrentPosition.y;
+	m_CurrentVelocity.y = getCurrentVelocity();
+	//zmniejszamy przyspieszenie ???
+
+
+	m_CurrentVelocity.x -= m_Acceleration.x/50;
+	if (m_CurrentVelocity.x > 0.0f)
 	{
-		
-		if (m_Dir == true&&m_CurrentPosition.y>0.0f)m_Dir = false;
-		else if(m_Dir == false && m_CurrentPosition.y < 0.0f) m_Dir = true;
-		
-		std::cout << "ODBICIE:"<<m_Dir << std::endl;
+
+		//1 na tej zmiennej oznacza ruch w prawo, wiec zwiekszam
+
+		if (m_DirX) m_CurrentPosition.x += m_CurrentVelocity.x* 0.005;
+		//ustawiamy predkosc na osi x tej czasteczki= tej co ja uderzyla, po czym zwalniamy o jej przyspieszenie??
+
+		else m_CurrentPosition.x -= m_CurrentVelocity.x* 0.005;
 	}
+
+
+
+
+
+
+
+	// ODBICIE Z POJEMNIKIEM -prawo i lewo
+	if (m_CurrentPosition.x > 14.0f || m_CurrentPosition.x < 0.0f) {
+		m_DirX = !m_DirX;
+		m_CurrentPosition.x += m_Acceleration.x *0.005;
+
+}
+	
 	
 
+	// ODBICIE Z POJEMNIKIEM gora i dol
+		if ((m_CurrentPosition.y < 0.0f || m_CurrentPosition.y > 14.0f))
+		{
+		m_DirY = !m_DirY;
+		m_CurrentPosition.y += m_Acceleration.y*0.005;
+		}
 
+
+
+	//ma sie wykonywac dopoki maksymalna wysokosc mozliwa do osiagniecia przez czasteczke jest wieksza 0.1f;
 	if (m_CurrMax > 0.1f)
 	{
 
 
 
-		if (m_Dir) {//do gory leci
+		if (!m_DirY) {
+			//jezeli jest ponad obecnym najwyzszym mozliwym punktem dla czasteczki
 			if (m_CurrentPosition.y > m_k * m_CurrMax)
 			{
-				m_CurrentVelocity *= m_k;
+				//przenmnazamy predkosc i maksymalna wysokosc przez wspolczynnik m_k i zmieniamy kierunek ruchu czasteczki;
+				m_CurrentVelocity.y *= m_k;
 				m_CurrMax *= m_k;
-				if (m_Dir == true)m_Dir = false;
-				else m_Dir = true;
 
-				std::cout << "SPADEK:" << m_Dir << std::endl;
+				m_DirY = !m_DirY;
+
 
 			}
 			else {
+				//leci do gory
 
-				m_CurrentVelocity -= m_Acceleration * 0.15;
-				m_CurrentPosition.y += m_CurrentVelocity *0.05 ;
-				CreateQuad(this, float(m_CurrentPosition.x), float(m_CurrentPosition.y), 1.0f, m_Size);
-				std::cout << "do GORY" << std::endl;
+				m_CurrentVelocity.y -= m_Acceleration.y * 0.005;
+				m_CurrentPosition.y += m_CurrentVelocity.y *0.005 ;
+			
 			}
 		}
-		else {//spada
+		else if (m_DirY) {//spada
 			
 
-			m_CurrentVelocity += m_Acceleration *0.15;
-			m_CurrentPosition.y -= m_CurrentVelocity * 0.05;
-			CreateQuad(this, float(m_CurrentPosition.x), float(m_CurrentPosition.y), 1.0f, m_Size);
-			std::cout << "SPADA" << std::endl;
+			m_CurrentVelocity.y += m_Acceleration.y *0.005;
+			m_CurrentPosition.y -= m_CurrentVelocity.y * 0.005;
 		}
+	
+		CreateQuad(this, float(m_CurrentPosition.x), float(m_CurrentPosition.y), 1.0f, m_Size);
+
 		
 	}
 	
@@ -140,13 +174,13 @@ void CreateQuad(Particle* target, float x, float y, float textureID,float size)
 
 
 
-//TO SPRAWDZONE I DZIALA TAK JAK POWINNO.
 void SweepAndPrune(std::vector<Particle> &Particles, size_t size)
 {
 	std::vector <std::vector<Particle*>> result;
 	std::vector<Particle*> Active;
 	unsigned int CurrentLast = 0;
-
+	result.clear();
+	Active.clear();
 	
 
 	while (CurrentLast < size)
@@ -167,49 +201,55 @@ void SweepAndPrune(std::vector<Particle> &Particles, size_t size)
 
 	}
 
+		//std::cout << "NOWE:\n";
 	for (int i=0;i<result.size();++i)
 	{
-
 		for (size_t j = 0; j < result[i].size() - 1; ++j)
 		{
 			for (size_t k = j + 1; k < result[i].size(); ++k)
 			{
-
+			
 				if (result[i][j]->GetCastedShadowX().y <= result[i][k]->GetCastedShadowX().x ||
 					result[i][j]->GetCastedShadowY().y <= result[i][k]->GetCastedShadowY().x ||
 					result[i][j]->GetCastedShadowX().x >= result[i][k]->GetCastedShadowX().y ||
 					result[i][j]->GetCastedShadowY().x >= result[i][k]->GetCastedShadowY().y
 					)continue;
-				
+		
 				unsigned int Dir = Direction(*result[i][k], *result[i][j]);
+				//uderzenie prawo lewo
 				if (Dir == 3)
 				{
-		
+					//std::cout << "PRAWO-LEWO\n";
+					//zmiana kieruynku 
+					
+					result[i][k]->m_DirX = !result[i][k]->m_DirX;
+					result[i][j]->m_DirX = !result[i][j]->m_DirX;
 
-				/*	result[i][j]->m_AccelerationXY.x = -result[i][j]->m_AccelerationXY.x;
-					result[i][k]->m_AccelerationXY.x = -result[i][k]->m_AccelerationXY.x;*/
+
+					//przypisanie predkosci			,x
+					float buf = result[i][j]->m_CurrentVelocity.x;
+					result[i][j]->m_CurrentVelocity.x = result[i][k]->m_CurrentVelocity.y;
+					result[i][k]->m_CurrentVelocity.x = buf;
+
+					//przypisanie przyspieszen
+					buf = result[i][j]->m_Acceleration.x;
+					result[i][j]->m_Acceleration.x = result[i][k]->m_Acceleration.y;
+					result[i][k]->m_Acceleration.x = buf;
+
+				
 
 				}
 				else {
-					if (result[i][j]->m_Dir == true)result[i][j]->m_Dir = false;
-					else result[i][j]->m_Dir = true;
-					//result[i][j]->m_CurrentPosition.y += result[i][j]->m_CurrentVelocity * 0.2;
+					//std::cout << "GORA-DOL\n";
+					result[i][j]->m_DirY =!result[i][j]->m_DirY;
 
+					
+					//zmiana wspolczynnika spowalnaicjacego
+					result[i][j]->m_CurrMax *= result[i][j]->m_k;
+					result[i][k]->m_CurrMax *= result[i][k]->m_k;
 
-					if (result[i][k]->m_Dir == true)result[i][k]->m_Dir = false;
-					else result[i][k]->m_Dir = true;
-					//result[i][k]->m_CurrentPosition.y += result[i][k]->m_CurrentVelocity * 0.2;
-					std::cout << " S&P ODBICIE:" << result[i][j]->m_Dir << std::endl;
-					std::cout << "x:" << result[i][j]->m_CurrentPosition.x << " y:" << result[i][j]->m_CurrentPosition.y << " Acceleration:" << result[i][j]->m_Acceleration
-						<< " Current Velocity :" << result[i][j]->m_CurrentVelocity << " Curr Max:" << result[i][j]->m_CurrMax << std::endl;
-					float buf = result[i][j]->m_CurrentVelocity;
-					result[i][j]->m_CurrentVelocity= result[i][k]->m_CurrentVelocity;
-					result[i][k]->m_CurrentVelocity=buf;
-					buf = result[i][j]->m_CurrMax;
-					result[i][j]->m_CurrMax = result[i][k]->m_CurrMax;
-					result[i][k]->m_CurrMax = buf;
-					//result[i][j]->m_AccelerationXY.y = -result[i][j]->m_AccelerationXY.y;
-					//result[i][k]->m_AccelerationXY.y = -result[i][k]->m_AccelerationXY.y;
+		
+			
 				    }
 
 	
@@ -225,7 +265,7 @@ unsigned int Direction(Particle& p1, Particle& p2)
 {
 
 	glm::vec2 Middle = { p1.m_Vertex[0].Position.x + p1.m_Size / 2,p1.m_Vertex[0].Position.y + p1.m_Size / 2 };
-	float currentMin=p1.m_Size+p2.m_Size;
+	float currentMin=p1.m_Size*sqrt(2) + p2.m_Size * sqrt(2);
 	int result = 0;
 	for (size_t i=0;i<3;++i)
 	{

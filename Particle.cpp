@@ -1,34 +1,20 @@
-
 #include "Particle.h"
 
-
-
-const float Particle::getCurrentVelocity()
-{
-	return sqrt(abs(2*(m_PreviousHeight - m_CurrentHeight) + pow(m_PreviousVelocity,2)));
-}
+//const float Particle::getCurrentVelocity()
+//{
+//	return sqrt(abs((2.0f*m_k*(m_PreviousHeight - m_CurrentHeight)) + static_cast<float>(pow(m_PreviousVelocity,2))));
+//}
 
 
 
 Particle::Particle(glm::vec2 StartPos)
-	:m_StartPos(StartPos), m_Size(0.5f),m_DirY(false),m_Mass(1.0f),m_CurrentHeight(StartPos.y)
-	,m_k(0.99f),m_CurrMax(StartPos.y)
+	:m_StartPos(StartPos), m_Size(0.5f),m_DirY(false),m_Mass(5.0f)
+	,m_k(0.8f),m_AnimationSpeed(0.0005f),m_CurrentVelocity({0.0f,0.0f})
+	
 {
-
-
-
-
 	m_CurrentPosition.x = m_StartPos.x;
 	m_CurrentPosition.y = m_StartPos.y;
-	m_Energy = m_Mass ;
-	//przyspieszenie na obu osiach
-	m_Acceleration = { 0.0f,1.0f };
-	//predkosc na obu osiach
-	m_CurrentVelocity = { 0.0f,0.0f };
-
-
-	
-
+	m_Energy = m_k * m_CurrentPosition.y;
 	CreateQuad(this, m_StartPos.x, m_StartPos.y, 1.0f,m_Size);
 }
 
@@ -41,134 +27,41 @@ void Particle::Update()
 {
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~TODO~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	//box ma byc na zmiennych, moze niech sie rozszerza im wiecej jest kulek???
-
-
-	//ustawiamy poprzedni stan czasteczki na ten ktory wlasnie mamy obecnie
-	m_PreviousHeight = m_CurrentHeight;
-	m_PreviousVelocity = m_CurrentVelocity.y;
-
-	//zmieniamy obecny stan czasteczki os y
-	m_CurrentHeight = m_CurrentPosition.y;
-	m_CurrentVelocity.y = getCurrentVelocity();
-	//zmniejszamy przyspieszenie ???
-
-
-	m_CurrentVelocity.x -= m_Acceleration.x/50;
-	if (m_CurrentVelocity.x > 0.0f)
-	{
-
-		//1 na tej zmiennej oznacza ruch w prawo, wiec zwiekszam
-
-		if (m_DirX) m_CurrentPosition.x += m_CurrentVelocity.x* 0.005;
-		//ustawiamy predkosc na osi x tej czasteczki= tej co ja uderzyla, po czym zwalniamy o jej przyspieszenie??
-
-		else m_CurrentPosition.x -= m_CurrentVelocity.x* 0.005;
-	}
-
-
-
-
-
-
-
-	// ODBICIE Z POJEMNIKIEM -prawo i lewo
-	if (m_CurrentPosition.x > 14.0f || m_CurrentPosition.x < 0.0f) {
-		m_DirX = !m_DirX;
-		m_CurrentPosition.x += m_Acceleration.x *0.005;
-
-}
+		// ODBICIE Z POJEMNIKIEM -prawo i lewo
+		if (m_CurrentPosition.x > 14.0f || m_CurrentPosition.x < 0.0f) 	m_DirX = !m_DirX;
+		// ODBICIE Z POJEMNIKIEM gora i dol
+		if ((m_CurrentPosition.y <= 0.0f && m_DirY == 0) ||( m_CurrentVelocity.y<=0 && m_DirY ==1&& m_CurrentPosition.y>=0.0f))
 	
-	
-
-	// ODBICIE Z POJEMNIKIEM gora i dol
-		if ((m_CurrentPosition.y < 0.0f || m_CurrentPosition.y > 14.0f))
 		{
-		m_DirY = !m_DirY;
-		m_CurrentPosition.y += m_Acceleration.y*0.005;
+			m_CurrentVelocity.y*= 0.9;
+			m_DirY = !m_DirY;
 		}
-
-
-
-	//ma sie wykonywac dopoki maksymalna wysokosc mozliwa do osiagniecia przez czasteczke jest wieksza 0.1f;
-	if (m_CurrMax > 0.1f)
-	{
-
-
-
-		if (!m_DirY) {
-			//jezeli jest ponad obecnym najwyzszym mozliwym punktem dla czasteczki
-			if (m_CurrentPosition.y > m_k * m_CurrMax)
-			{
-				//przenmnazamy predkosc i maksymalna wysokosc przez wspolczynnik m_k i zmieniamy kierunek ruchu czasteczki;
-				m_CurrentVelocity.y *= m_k;
-				m_CurrMax *= m_k;
-
-				m_DirY = !m_DirY;
-
-
-			}
-			else {
-				//leci do gory
-
-				m_CurrentVelocity.y -= m_Acceleration.y * 0.005;
-				m_CurrentPosition.y += m_CurrentVelocity.y *0.005 ;
+		// RUCH NA OSI X:
+		if (m_CurrentVelocity.x > 0.0f)
+		{
+			//1 na tej zmiennej oznacza ruch w prawo, wiec zwiekszam
+			if (m_DirX) m_CurrentPosition.x += m_CurrentVelocity.x * m_AnimationSpeed;
+			//ustawiamy predkosc na osi x tej czasteczki= tej co ja uderzyla, po czym zwalniamy o jej przyspieszenie??
+			else m_CurrentPosition.x -= m_CurrentVelocity.x * m_AnimationSpeed;
+		}
+		// RUCH NA OSI Y:
+		if (m_DirY)
+		{			
+					m_CurrentVelocity.y -= m_k;
+					m_CurrentPosition.y += m_CurrentVelocity.y * m_AnimationSpeed;					
+		}
+		else if(!m_DirY)
+		{	
+				m_CurrentVelocity.y += m_k;	
+				m_CurrentPosition.y -= m_CurrentVelocity.y * m_AnimationSpeed;		
+		}
 			
-			}
-		}
-		else if (m_DirY) {//spada
-			
-
-			m_CurrentVelocity.y += m_Acceleration.y *0.005;
-			m_CurrentPosition.y -= m_CurrentVelocity.y * 0.005;
-		}
-	
-		CreateQuad(this, float(m_CurrentPosition.x), float(m_CurrentPosition.y), 1.0f, m_Size);
-
-		
-	}
-	
-
-
+		if(m_CurrentPosition.y>0.0f&&m_CurrentVelocity.y>=0.0f)	CreateQuad(this, float(m_CurrentPosition.x), float(m_CurrentPosition.y), 1.0f, m_Size);
 }
 
 
 
 
-void CreateQuad(Particle* target, float x, float y, float textureID,float size)
-{
-	{
-	
-
-		target->m_Vertex[0].Position = { x ,y, 0.0f };
-		target->m_Vertex[0].Color = { 0.1f,0.1f,0.1f, 1.0f };
-		target->m_Vertex[0].TexCoords = { 0.0f, 0.0f };
-		target->m_Vertex[0].TexID = textureID;
-		
-		
-
-		target->m_Vertex[1].Position = { x+size,y, 0.0f };
-		target->m_Vertex[1].Color = { 0.1f,0.1f,0.1f, 1.0f };
-		target->m_Vertex[1].TexCoords = { 1.0f, 0.0f };
-		target->m_Vertex[1].TexID = textureID;
-
-
-		target->m_Vertex[2].Position = { x + size,y+size, 0.0f };
-		target->m_Vertex[2].Color = { 0.1f,0.1f,0.1f, 1.0f };
-		target->m_Vertex[2].TexCoords = { 1.0f, 1.0f };
-		target->m_Vertex[2].TexID = textureID;
-
-
-		target->m_Vertex[3].Position = { x ,y + size, 0.0f };
-		target->m_Vertex[3].Color = { 0.1f,0.1f,0.1f, 1.0f };
-		target->m_Vertex[3].TexCoords = { 0.0f, 1.0f };
-		target->m_Vertex[3].TexID = textureID;
-
-
-
-
-
-	}
-}
 
 
 
@@ -182,7 +75,6 @@ void SweepAndPrune(std::vector<Particle> &Particles, size_t size)
 	result.clear();
 	Active.clear();
 	
-
 	while (CurrentLast < size)
 	{
 		Active.push_back(&Particles[CurrentLast]);
@@ -201,7 +93,6 @@ void SweepAndPrune(std::vector<Particle> &Particles, size_t size)
 
 	}
 
-		//std::cout << "NOWE:\n";
 	for (int i=0;i<result.size();++i)
 	{
 		for (size_t j = 0; j < result[i].size() - 1; ++j)
@@ -216,40 +107,31 @@ void SweepAndPrune(std::vector<Particle> &Particles, size_t size)
 					)continue;
 		
 				unsigned int Dir = Direction(*result[i][k], *result[i][j]);
-				//uderzenie prawo lewo
+				//KOLIZJA PRAWO-LEWO
 				if (Dir == 3)
 				{
-					//std::cout << "PRAWO-LEWO\n";
-					//zmiana kieruynku 
-					
-					result[i][k]->m_DirX = !result[i][k]->m_DirX;
+					//zmiana kieruynku 	obu czasteczek na osi x
 					result[i][j]->m_DirX = !result[i][j]->m_DirX;
+					result[i][k]->m_DirX = !result[i][k]->m_DirX;
 
 
-					//przypisanie predkosci			,x
-					float buf = result[i][j]->m_CurrentVelocity.x;
+					//>>
+					
 					result[i][j]->m_CurrentVelocity.x = result[i][k]->m_CurrentVelocity.y;
-					result[i][k]->m_CurrentVelocity.x = buf;
-
-					//przypisanie przyspieszen
-					buf = result[i][j]->m_Acceleration.x;
-					result[i][j]->m_Acceleration.x = result[i][k]->m_Acceleration.y;
-					result[i][k]->m_Acceleration.x = buf;
-
-				
+					result[i][k]->m_CurrentVelocity.x = result[i][k]->m_CurrentVelocity.y;
 
 				}
+				//KOLIZJA GORA-DOL
 				else {
-					//std::cout << "GORA-DOL\n";
-					result[i][j]->m_DirY =!result[i][j]->m_DirY;
+					bool direction = result[i][j]->m_DirY;
+					result[i][j]->m_DirY = result[i][k]->m_DirY;
+					result[i][k]->m_DirY = direction;
 
+					float buf = result[i][j]->m_CurrentVelocity.y*0.99f;
+					result[i][j]->m_CurrentVelocity.y = result[i][k]->m_CurrentVelocity.y*0.99f;
+					result[i][k]->m_CurrentVelocity.y = buf;
 					
-					//zmiana wspolczynnika spowalnaicjacego
-					result[i][j]->m_CurrMax *= result[i][j]->m_k;
-					result[i][k]->m_CurrMax *= result[i][k]->m_k;
-
-		
-			
+					
 				    }
 
 	
@@ -286,6 +168,41 @@ unsigned int Direction(Particle& p1, Particle& p2)
 	return result;
 }
 
+void CreateQuad(Particle* target, float x, float y, float textureID, float size)
+{
+	{
+
+
+		target->m_Vertex[0].Position = { x ,y, 0.0f };
+		target->m_Vertex[0].Color = { 0.1f,0.1f,0.1f, 1.0f };
+		target->m_Vertex[0].TexCoords = { 0.0f, 0.0f };
+		target->m_Vertex[0].TexID = textureID;
+
+
+
+		target->m_Vertex[1].Position = { x + size,y, 0.0f };
+		target->m_Vertex[1].Color = { 0.1f,0.1f,0.1f, 1.0f };
+		target->m_Vertex[1].TexCoords = { 1.0f, 0.0f };
+		target->m_Vertex[1].TexID = textureID;
+
+
+		target->m_Vertex[2].Position = { x + size,y + size, 0.0f };
+		target->m_Vertex[2].Color = { 0.1f,0.1f,0.1f, 1.0f };
+		target->m_Vertex[2].TexCoords = { 1.0f, 1.0f };
+		target->m_Vertex[2].TexID = textureID;
+
+
+		target->m_Vertex[3].Position = { x ,y + size, 0.0f };
+		target->m_Vertex[3].Color = { 0.1f,0.1f,0.1f, 1.0f };
+		target->m_Vertex[3].TexCoords = { 0.0f, 1.0f };
+		target->m_Vertex[3].TexID = textureID;
+
+
+
+
+
+	}
+}
 
 
 

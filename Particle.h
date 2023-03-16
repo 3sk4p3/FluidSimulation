@@ -24,14 +24,10 @@ private:
 	glm::vec2 m_VelocityXY;//predkosc
 	float m_Size;
 	float m_Mass;
-	glm::vec2 m_Acceleration;
 	float m_Energy;
-	float m_CurrentHeight;
-	float m_PreviousHeight;
-	glm::vec2 m_CurrentVelocity;
-	float m_PreviousVelocity;
+	Vec2 m_CurrentVelocity;
 	float m_k;
-	float m_CurrMax;
+	float m_AnimationSpeed;
 	bool m_DirY;
 	bool m_DirX;
 	Vec2 m_CurrentPosition;
@@ -42,8 +38,7 @@ public:
 	const float getCurrentVelocity();
 	const void getE() {
 		std::cout << "x: " << m_CurrentPosition.x << " y:" << m_CurrentPosition.y << std::endl <<
-			"velo x:" << m_CurrentVelocity.x << "velo y:" << m_CurrentVelocity.y << std::endl <<
-			"accel x:" << m_Acceleration.x << "accel y:" << m_Acceleration.y << std::endl << std::endl;
+			"velo x:" << m_CurrentVelocity.x << "velo y:" << m_CurrentVelocity.y << std::endl;
 	}
 	
 	Particle(glm::vec2 StartPos);

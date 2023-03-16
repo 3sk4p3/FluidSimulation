@@ -2,7 +2,7 @@
 #include <algorithm>
 using namespace GLCore;
 using namespace GLCore::Utils;
-const size_t NumsofParticles = 325;
+const size_t NumsofParticles = 150;
 const size_t MaxParticleVertexCount = NumsofParticles * 4;
 const size_t MaxParticleIndexCount = NumsofParticles* 6;
 
@@ -111,7 +111,7 @@ void SandboxLayer::OnAttach()
 		_x += 1.0f;
 		if (_x>=14.0f) 
 		{ 
-			_y -= 0.6f;
+			_y -= 1.2f;
 			if (direction)
 			{
 				direction = !direction;
@@ -272,14 +272,12 @@ void SandboxLayer::OnUpdate(Timestep ts)
 	SetUniformMat4(m_Shader->GetRendererID(), "u_Transform", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));
 
 	glBindVertexArray(m_QuadVA);
-	Particle* mp = &m_Particles[0];
 	std::sort(m_Particles.begin(), m_Particles.end());
 
 	SweepAndPrune(m_Particles, NumsofParticles);
 	for (auto& i : m_Particles)
 	{
 		
-		//mp->getE();
 		i.Update();
 
 	}

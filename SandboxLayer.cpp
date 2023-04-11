@@ -2,10 +2,10 @@
 #include <algorithm>
 using namespace GLCore;
 using namespace GLCore::Utils;
-const size_t NumsofParticles = 150;
+const size_t NumsofParticles =800;
 const size_t MaxParticleVertexCount = NumsofParticles * 4;
 const size_t MaxParticleIndexCount = NumsofParticles* 6;
-
+const float BaseSize = 0.5f;
 
 
 
@@ -97,35 +97,85 @@ void SandboxLayer::OnAttach()
 
 
 
-	std::random_device rd;
-	std::mt19937 mt(rd());
-	std::uniform_real_distribution<float> dist(1.0f, 14.0f);
+	
 
 	float _x = 0.45f;
 	float _y = 14.0f;
 	bool direction = false;
 	m_Particles.reserve(NumsofParticles);
+	float bufSize=BaseSize;
+	int count=0;
+
+	while (true)
+	{
+		if (count > NumsofParticles)
+		{
+			_y = 14.0f;
+			break;
+
+		}
+		else bufSize /= 1.5f;
+		count = 0;
+		_y = 14.0f;
+		while (true)
+		{
+
+			if (_y < 1.5f)break;
+
+
+			_x += bufSize  *3;
+			if (_x >= 15.0f-BaseSize)
+			{
+				_y -= bufSize * 1.2;
+
+				if (direction)
+				{
+					direction = !direction;
+					_x = bufSize*9/10 ;
+				}
+				else
+				{
+					direction = !direction;
+					_x = 0.0f;
+				}
+			}
+			++count;
+
+
+		}
+		
+	
+	}
+
+	std::random_device rd;
+	std::mt19937 mt(rd());
+	std::uniform_real_distribution<float> dist(2.1*bufSize, 3*bufSize);
+
 	for (size_t i = 0; i < NumsofParticles; ++i)
 	{
-		m_Particles.push_back(Particle({ _x ,_y}));
-		_x += 1.0f;
-		if (_x>=14.0f) 
-		{ 
-			_y -= 1.2f;
+
+
+
+
+		m_Particles.push_back(Particle({ _x ,_y }, bufSize));
+		_x += dist(mt);
+		if (_x >=15.0f -bufSize)
+		{
+			_y -= bufSize * 1.2;
+
 			if (direction)
 			{
 				direction = !direction;
-			_x = 0.45f;
+				_x = dist(mt);
 			}
 			else
 			{
 				direction = !direction;
-				_x = 0.0f;
+				_x = dist(mt);
 			}
 		}
 
 	}
-	
 	
 	
 
@@ -247,7 +297,7 @@ void SandboxLayer::OnUpdate(Timestep ts)
 
 	glBindVertexArray(m_QuadVA);
 
-	std::vector<Vertex>Vertices;
+	 std::vector<Vertex>Vertices;
 	Vertices.reserve(MaxParticleVertexCount);
 
 	for (size_t i = 0; i < NumsofParticles; ++i)

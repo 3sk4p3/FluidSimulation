@@ -4,17 +4,13 @@
 //{
 //	return sqrt(abs((2.0f*m_k*(m_PreviousHeight - m_CurrentHeight)) + static_cast<float>(pow(m_PreviousVelocity,2))));
 //}
-
-
-
-Particle::Particle(glm::vec2 StartPos)
-	:m_StartPos(StartPos), m_Size(0.5f),m_DirY(false),m_Mass(5.0f)
-	,m_k(0.8f),m_AnimationSpeed(0.0005f),m_CurrentVelocity({0.0f,0.0f})
+Particle::Particle(glm::vec2 StartPos, float I_size)
+	:m_StartPos(StartPos), m_Size(I_size), m_DirY(false)
+	, m_k(0.96f), m_AnimationSpeed(0.1f), m_CurrentVelocity({ 0.0f,0.0f }), m_Acceleration(0.05f)
 	
 {
 	m_CurrentPosition.x = m_StartPos.x;
 	m_CurrentPosition.y = m_StartPos.y;
-	m_Energy = m_k * m_CurrentPosition.y;
 	CreateQuad(this, m_StartPos.x, m_StartPos.y, 1.0f,m_Size);
 }
 
@@ -25,38 +21,43 @@ Particle::~Particle()
 
 void Particle::Update()
 {
-	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~TODO~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	//box ma byc na zmiennych, moze niech sie rozszerza im wiecej jest kulek???
-		// ODBICIE Z POJEMNIKIEM -prawo i lewo
-		if (m_CurrentPosition.x > 14.0f || m_CurrentPosition.x < 0.0f) 	m_DirX = !m_DirX;
-		// ODBICIE Z POJEMNIKIEM gora i dol
-		if ((m_CurrentPosition.y <= 0.0f && m_DirY == 0) ||( m_CurrentVelocity.y<=0 && m_DirY ==1&& m_CurrentPosition.y>=0.0f))
-	
+
+		if (m_CurrentPosition.x > 15.0f-m_Size || m_CurrentPosition.x < 0.0f)
 		{
-			m_CurrentVelocity.y*= 0.9;
+			m_DirX = !m_DirX;
+			m_CurrentVelocity.x *= m_k;
+
+
+		}
+		if ( m_CurrentPosition.y < 0.0f||m_CurrentVelocity.y<0.0f)
+		{
 			m_DirY = !m_DirY;
+			m_CurrentVelocity.y *= m_k;
+			m_CurrentPosition.y += m_CurrentVelocity.y*m_AnimationSpeed;
+
 		}
-		// RUCH NA OSI X:
-		if (m_CurrentVelocity.x > 0.0f)
+	
+		if(m_DirY&&m_CurrentPosition.y>=0.0f){
+		m_CurrentPosition.y += m_CurrentVelocity.y * m_AnimationSpeed;
+		m_CurrentVelocity.y -= m_Acceleration;
+		}
+		else
 		{
-			//1 na tej zmiennej oznacza ruch w prawo, wiec zwiekszam
-			if (m_DirX) m_CurrentPosition.x += m_CurrentVelocity.x * m_AnimationSpeed;
-			//ustawiamy predkosc na osi x tej czasteczki= tej co ja uderzyla, po czym zwalniamy o jej przyspieszenie??
-			else m_CurrentPosition.x -= m_CurrentVelocity.x * m_AnimationSpeed;
+			m_CurrentPosition.y -= m_CurrentVelocity.y * m_AnimationSpeed;
+			m_CurrentVelocity.y += m_Acceleration;
 		}
-		// RUCH NA OSI Y:
-		if (m_DirY)
-		{			
-					m_CurrentVelocity.y -= m_k;
-					m_CurrentPosition.y += m_CurrentVelocity.y * m_AnimationSpeed;					
+		if (m_DirX) {
+			m_CurrentPosition.x += m_CurrentVelocity.x * m_AnimationSpeed;
+
 		}
-		else if(!m_DirY)
-		{	
-				m_CurrentVelocity.y += m_k;	
-				m_CurrentPosition.y -= m_CurrentVelocity.y * m_AnimationSpeed;		
+		else
+		{
+			m_CurrentPosition.x -= m_CurrentVelocity.x * m_AnimationSpeed;
+
 		}
-			
-		if(m_CurrentPosition.y>0.0f&&m_CurrentVelocity.y>=0.0f)	CreateQuad(this, float(m_CurrentPosition.x), float(m_CurrentPosition.y), 1.0f, m_Size);
+
+		CreateQuad(this, m_CurrentPosition.x,m_CurrentPosition.y, 1.0f, m_Size);
+
 }
 
 
@@ -105,37 +106,37 @@ void SweepAndPrune(std::vector<Particle> &Particles, size_t size)
 					result[i][j]->GetCastedShadowX().x >= result[i][k]->GetCastedShadowX().y ||
 					result[i][j]->GetCastedShadowY().x >= result[i][k]->GetCastedShadowY().y
 					)continue;
+
 		
-				unsigned int Dir = Direction(*result[i][k], *result[i][j]);
-				//KOLIZJA PRAWO-LEWO
-				if (Dir == 3)
-				{
-					//zmiana kieruynku 	obu czasteczek na osi x
-					result[i][j]->m_DirX = !result[i][j]->m_DirX;
-					result[i][k]->m_DirX = !result[i][k]->m_DirX;
+				 double Dir = Direction(*result[i][j], *result[i][k]);
+				 float Vx  = result[i][j]->m_CurrentVelocity.x *result[i][j]->m_k* cos(Dir) - result[i][j]->m_CurrentVelocity.y*result[i][j]->m_k  *  sin(Dir);
+				 float Vy = result[i][j]->m_CurrentVelocity.x  *result[i][j]->m_k* sin(Dir) + result[i][j]->m_CurrentVelocity.y*result[i][j]->m_k *  cos(Dir);
+				 float Vy2 = result[i][k]->m_CurrentVelocity.x *result[i][j]->m_k* sin(Dir) + result[i][k]->m_CurrentVelocity.y*result[i][j]->m_k *  cos(Dir);
+				 float Vx2 = result[i][k]->m_CurrentVelocity.x *result[i][j]->m_k* cos(Dir) - result[i][k]->m_CurrentVelocity.y*result[i][j]->m_k *  sin(Dir);
 
+				 float buf = Vx;
+				 Vx = Vx2;
+				 Vx2 = buf;
+		/*		 buf = Vy;
+				 Vy = Vy2;
+				 Vy2 = buf;*/
+			///*	 if (Vx * result[i][j]->m_CurrentVelocity.x < 0) {  
+			//		 
+			//		 result[i][j]->m_DirX = !result[i][j]->m_DirX;
+			//		 result[i][k]->m_DirX = !result[i][k]->m_DirX;
+			//	 }
 
-					//>>
-					
-					result[i][j]->m_CurrentVelocity.x = result[i][k]->m_CurrentVelocity.y;
-					result[i][k]->m_CurrentVelocity.x = result[i][k]->m_CurrentVelocity.y;
+			//	 if (Vy * result[i][j]->m_CurrentVelocity.y < 0) {
+			//		
+			//		 result[i][j]->m_DirY = !result[i][j]->m_DirX;
+			//		 result[i][k]->m_DirY = !result[i][k]->m_DirY;
+			//	 }*/
+				result[i][j]->m_CurrentVelocity.x = Vx * cos(-Dir) - Vy*   sin(-Dir);
+				result[i][j]->m_CurrentVelocity.y = Vx * sin(-Dir) + Vy*   cos(-Dir);
+			   result[i][k]->m_CurrentVelocity.x = Vx2 * cos(-Dir) - Vy2 * sin(-Dir);
+			   result[i][k]->m_CurrentVelocity.y = Vx2 * sin(-Dir) + Vy2 * cos(-Dir);				
+				
 
-				}
-				//KOLIZJA GORA-DOL
-				else {
-					bool direction = result[i][j]->m_DirY;
-					result[i][j]->m_DirY = result[i][k]->m_DirY;
-					result[i][k]->m_DirY = direction;
-
-					float buf = result[i][j]->m_CurrentVelocity.y*0.99f;
-					result[i][j]->m_CurrentVelocity.y = result[i][k]->m_CurrentVelocity.y*0.99f;
-					result[i][k]->m_CurrentVelocity.y = buf;
-					
-					
-				    }
-
-	
-			
 			}
 		}
 
@@ -143,29 +144,14 @@ void SweepAndPrune(std::vector<Particle> &Particles, size_t size)
 
 }
 
-unsigned int Direction(Particle& p1, Particle& p2)
+ double Direction(Particle& p1, Particle& p2)
 {
+		
+		glm::vec2 Middle_1 = { p1.m_Vertex[0].Position.x + p1.m_Size / 2,p1.m_Vertex[0].Position.y + p1.m_Size / 2 };
+		glm::vec2 Middle_2 = { p2.m_Vertex[0].Position.x + p2.m_Size / 2,p2.m_Vertex[0].Position.y + p2.m_Size / 2 };
+		double angle = atan2f(Middle_2.y - Middle_1.y, Middle_2.x - Middle_1.x);
+		return angle;
 
-	glm::vec2 Middle = { p1.m_Vertex[0].Position.x + p1.m_Size / 2,p1.m_Vertex[0].Position.y + p1.m_Size / 2 };
-	float currentMin=p1.m_Size*sqrt(2) + p2.m_Size * sqrt(2);
-	int result = 0;
-	for (size_t i=0;i<3;++i)
-	{
-		float sum=0.0f;
-		glm::vec2 currentPos = { p2.m_Vertex[i].Position.x,p2.m_Vertex[i].Position.y};
-		auto distance = glm::length(Middle - currentPos);
-		sum += distance;
-		 currentPos = { p2.m_Vertex[i+1].Position.x,p2.m_Vertex[i+1].Position.y };
-		 distance = glm::length(Middle - currentPos);
-		 sum += distance;
-		 if (currentMin>sum)
-		 {
-			 currentMin = sum;
-			 result = i + i + 1;
-		 }
-
-	}
-	return result;
 }
 
 void CreateQuad(Particle* target, float x, float y, float textureID, float size)

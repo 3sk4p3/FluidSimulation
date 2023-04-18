@@ -2,7 +2,7 @@
 #include <algorithm>
 using namespace GLCore;
 using namespace GLCore::Utils;
-const size_t NumsofParticles =800;
+const size_t NumsofParticles =50;
 const size_t MaxParticleVertexCount = NumsofParticles * 4;
 const size_t MaxParticleIndexCount = NumsofParticles* 6;
 const float BaseSize = 0.5f;
@@ -322,15 +322,14 @@ void SandboxLayer::OnUpdate(Timestep ts)
 	SetUniformMat4(m_Shader->GetRendererID(), "u_Transform", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));
 
 	glBindVertexArray(m_QuadVA);
-	std::sort(m_Particles.begin(), m_Particles.end());
 
-	SweepAndPrune(m_Particles, NumsofParticles);
 	for (auto& i : m_Particles)
 	{
 		
-		i.Update();
+		i.Update(0.001f);
 
 	}
+	SweepAndPrune(m_Particles);
 	glDrawElements(GL_TRIANGLES, MaxParticleIndexCount, GL_UNSIGNED_INT, nullptr);
 	
 
@@ -343,49 +342,49 @@ void SandboxLayer::OnUpdate(Timestep ts)
 
 	// my shot at lines
 
-	glCreateVertexArrays(1, &m_LineVA);
-	glBindVertexArray(m_LineVA);
-	glCreateBuffers(1, &m_LineVB);
-	glBindBuffer(GL_ARRAY_BUFFER, m_LineVB);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 5, nullptr, GL_DYNAMIC_DRAW);
-	//glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	//glCreateVertexArrays(1, &m_LineVA);
+	//glBindVertexArray(m_LineVA);
+	//glCreateBuffers(1, &m_LineVB);
+	//glBindBuffer(GL_ARRAY_BUFFER, m_LineVB);
+	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 5, nullptr, GL_DYNAMIC_DRAW);
+	////glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
 
 
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Position));
+	//glEnableVertexAttribArray(0);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Position));
 
-	//kolor
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Color));
-
-
-	//mapowanie textury
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, TexCoords));
+	////kolor
+	//glEnableVertexAttribArray(1);
+	//glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Color));
 
 
-	//index textury
-	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, TexID));
+	////mapowanie textury
+	//glEnableVertexAttribArray(2);
+	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, TexCoords));
 
 
-	std::array<Vertex, 5> my_vertices;
-	Vertex* my_buffer = my_vertices.data();
-	my_buffer = CreateLine(my_buffer, { 0,15 }, { 15,15 }, { 15,0 }, { 0,0 });
-	glBufferSubData(GL_ARRAY_BUFFER,0, my_vertices.size() * sizeof(Vertex), my_vertices.data());
-	
+	////index textury
+	//glEnableVertexAttribArray(3);
+	//glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, TexID));
 
-	
-	float my_indices[] =
-	{
- 		0.0f,1.0f,2.0f,3.0f
-	};
-	glCreateBuffers(1, &m_LineIB);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_LineIB);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float)*4, my_indices, GL_STATIC_DRAW);
-	
-	glDrawArrays(GL_LINE_STRIP, 0, 5);
+
+	//std::array<Vertex, 5> my_vertices;
+	//Vertex* my_buffer = my_vertices.data();
+	//my_buffer = CreateLine(my_buffer, { 0,15 }, { 15,15 }, { 15,0 }, { 0,0 });
+	//glBufferSubData(GL_ARRAY_BUFFER,0, my_vertices.size() * sizeof(Vertex), my_vertices.data());
+	//
+
+	//
+	//float my_indices[] =
+	//{
+ //		0.0f,1.0f,2.0f,3.0f
+	//};
+	//glCreateBuffers(1, &m_LineIB);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_LineIB);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float)*4, my_indices, GL_STATIC_DRAW);
+	//
+	//glDrawArrays(GL_LINE_STRIP, 0, 5);
 
 
 	

@@ -18,18 +18,19 @@ struct Vertex
 class Particle
 {
 
-private:
+public:
 	glm::vec2 m_StartPos;
 	Vertex  m_Vertex[4];
 	float m_Size;
 	float m_k;
 	bool m_DirX;
 	bool m_DirY;
-	float m_Acceleration;
+	glm::vec2 m_Gravity;
 	float m_AnimationSpeed;
-	Vec2 m_CurrentVelocity;
-	Vec2 m_CurrentPosition;
-	float m_PreviousPosition;
+	glm::vec2 m_Acceleration;
+	glm::vec2 m_CurrentVelocity;
+	glm::vec2 m_PreviousPosition;
+	glm::vec2 m_CurrentPosition;
 	float m_PreviousVelocity;
 	
 
@@ -43,7 +44,7 @@ public:
 	
 	Particle(glm::vec2 StartPos,float I_size);
 	~Particle();
-	void Update();
+	void Update(float dt);
 	const Vertex* GetBegVertex() { return m_Vertex; }
 	const glm::vec2 GetCastedShadowX() { return glm::vec2(m_CurrentPosition.x, m_CurrentPosition.x + m_Size); }
 	const glm::vec2 GetCastedShadowY() { return glm::vec2(m_CurrentPosition.y, m_CurrentPosition.y+ m_Size); }
@@ -55,7 +56,7 @@ public:
 
 private:
 	friend  void CreateQuad(Particle* target, float x, float y, float textureID,float size);
-	friend void SweepAndPrune(std::vector<Particle>& Particles,size_t size);
+	friend void SweepAndPrune(std::vector<Particle>& Particles);
 	friend  double  Direction(Particle& p1, Particle& p2) ;
 	//friend std::vector<std::pair<int, Particle>>SweepAndPruneColisionHandler(std::vector<std::vector<Particle>>Particles);
 	

@@ -1,5 +1,5 @@
 #include "Particle.h"
-
+#include "SandboxLayer.h"
 
 //const float Particle::getCurrentVelocity()
 //{
@@ -8,7 +8,7 @@
 
 Particle::Particle(glm::vec2 StartPos, float I_size)
 	:m_StartPos(StartPos), m_Size(I_size), m_DirY(false)
-	, m_k(1.0f), m_AnimationSpeed(0.1f), m_CurrentVelocity({ 0.0f,0.0f }),m_Gravity{0.0f,25.0f}
+	, m_k(1.0f), m_AnimationSpeed(0.1f), m_CurrentVelocity({ 0.0f,0.0f }),m_Gravity{0.0f,35.0f}
 	
 {
 	m_CurrentPosition.x = m_StartPos.x;
@@ -30,11 +30,10 @@ void Particle::Update(float dt)
 	const float sub_dt = dt / static_cast<float>(sub_steps);
 	for (size_t i = 0; i < sub_steps; i++)
 	{
-		m_Acceleration += m_Gravity;
-		m_CurrentVelocity = m_CurrentPosition - m_PreviousPosition;
-		m_PreviousPosition = m_CurrentPosition;
-		m_CurrentPosition = m_CurrentPosition + m_CurrentVelocity - m_Acceleration * sub_dt * sub_dt;
-		const glm::vec2 position{ 7.5f,7.5f };
+	
+
+		//circular shape equations
+	/*	const glm::vec2 position{ 7.5f,7.5f };
 		const float radius = 10.0f;
 		glm::vec2 to_obj = m_CurrentPosition - position;
 		const float dist = glm::length(to_obj);
@@ -42,7 +41,43 @@ void Particle::Update(float dt)
 		{
 			const glm::vec2 n = to_obj / dist;
 			m_CurrentPosition = position + n * (radius - m_Size / 2);
+		}*/
+		//rectangular shape equations
+		if (LottoToggler )
+
+		{
+			glm::vec2 left = { 5.0f, 0.0f };
+				m_Acceleration += left;
 		}
+		if (m_CurrentPosition.x > 14.9f)
+		{
+			
+			if (m_CurrentPosition.y < m_CurrentPosition.x / 2 + 7.5f)m_CurrentPosition.y = m_CurrentPosition.x / 2 + 7.5f;
+			else if (m_CurrentPosition.y > m_CurrentPosition.x / 2 + 9.5f)m_CurrentPosition.y = m_CurrentPosition.x / 2 + 9.5f;
+		}
+		m_Acceleration += m_Gravity;
+		m_CurrentVelocity = m_CurrentPosition - m_PreviousPosition;
+		m_PreviousPosition = m_CurrentPosition;
+		m_CurrentPosition = m_CurrentPosition + m_CurrentVelocity - m_Acceleration * sub_dt * sub_dt;
+
+
+
+		if (!LottoToggler)
+		{
+		if (m_CurrentPosition.x < 15.0f)m_CurrentPosition.x = 15.0f;
+		}
+		else
+		{
+
+			if (m_CurrentPosition.y < 15.0f - m_Size)
+			{
+
+				if (m_CurrentPosition.x < 5.0f)m_CurrentPosition.x = 5.0f;
+				else if (m_CurrentPosition.x > 15.0f - m_Size)m_CurrentPosition.x = 15.0f - m_Size;
+			}
+			if (m_CurrentPosition.y < 0.0f)m_CurrentPosition.y = 0.0f;
+		}
+		if (m_CurrentPosition.x > 30.0f )m_CurrentPosition.x = 30.0f ;
 
 		m_Acceleration = {};
 	}

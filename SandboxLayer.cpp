@@ -8,8 +8,7 @@ const size_t NumsofParticles =1000;
 const size_t MaxParticleVertexCount = NumsofParticles * 4;
 const size_t MaxParticleIndexCount = NumsofParticles* 6;
 const float BaseSize = 0.5f;
-
-
+bool	LottoToggler = false;
 
 
 
@@ -17,7 +16,6 @@ SandboxLayer::SandboxLayer()
 	: m_CameraController(16.0f / 9.0f,true)
 
 {
-
 
 }
 
@@ -160,7 +158,7 @@ void SandboxLayer::OnAttach()
 
 
 
-		m_Particles.push_back(Particle({ _x ,_y }, bufSize));
+		m_Particles.push_back(Particle({ _x+16.0f ,_y+16.0f }, bufSize));
 		_x += dist(mt);
 		if (_x >=15.0f -bufSize)
 		{
@@ -252,11 +250,36 @@ void SandboxLayer::OnEvent(Event& event)
 
 static Vertex* CreateLine(Vertex* target, glm::vec2 topL, glm::vec2 topR,glm::vec2 botR, glm::vec2 botL)
 {
-	target->Position = { topL.x,topL.y,0.0f }; //0 15
-	target->Color= { 1.0f,0.0f,0.0f,1.0f};
+
+	if (!LottoToggler)
+	{
+
+	target->Position = { 15.0f,15.0f,0.0f };//15 15
+	target->Color = { 1.0f,0.0f,0.0f,1.0f };
 	target->TexCoords = { 0.0f,0.0f };
 	target->TexID = { 2.0f };
 	++target;
+	}
+
+	target->Position = { 15.0f,17.5f,0.0f };//15 15
+	target->Color = { 1.0f,0.0f,0.0f,1.0f };
+	target->TexCoords = { 0.0f,0.0f };
+	target->TexID = { 2.0f };
+	++target;
+
+	target->Position = { 30.0f,25.0f,0.0f };//15 15
+	target->Color = { 1.0f,0.0f,0.0f,1.0f };
+	target->TexCoords = { 0.0f,0.0f };
+	target->TexID = { 2.0f };
+	++target;
+
+	target->Position = { 30.0f,22.5f,0.0f };//15 15
+	target->Color = { 1.0f,0.0f,0.0f,1.0f };
+	target->TexCoords = { 0.0f,0.0f };
+	target->TexID = { 2.0f };
+	++target;
+
+
 
 	target->Position = { topR.x,topR.y,0.0f };//15 15
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
@@ -271,13 +294,13 @@ static Vertex* CreateLine(Vertex* target, glm::vec2 topL, glm::vec2 topR,glm::ve
 	++target;
 
 
-	target->Position = { botL.x,botL.y,0.0f };// 0 0
+	target->Position = { 5.0f,0.0f,0.0f };// 0 0
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
 	target->TexCoords = { 0.0f,0.0f };
 	target->TexID = { 2.0f };
 	++target;
 
-	target->Position = { topL.x,topL.y,0.0f }; //0 15
+	target->Position = { 5.0f,15.0f,0.0f }; //0 15
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
 	target->TexCoords = { 0.0f,0.0f };
 	target->TexID = { 2.0f };
@@ -358,49 +381,49 @@ void SandboxLayer::OnUpdate(Timestep ts)
 
 	// my shot at lines
 
-	//glCreateVertexArrays(1, &m_LineVA);
-	//glBindVertexArray(m_LineVA);
-	//glCreateBuffers(1, &m_LineVB);
-	//glBindBuffer(GL_ARRAY_BUFFER, m_LineVB);
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 5, nullptr, GL_DYNAMIC_DRAW);
-	////glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glCreateVertexArrays(1, &m_LineVA);
+	glBindVertexArray(m_LineVA);
+	glCreateBuffers(1, &m_LineVB);
+	glBindBuffer(GL_ARRAY_BUFFER, m_LineVB);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 8, nullptr, GL_DYNAMIC_DRAW);
+	//glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
 
 
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Position));
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Position));
 
-	////kolor
-	//glEnableVertexAttribArray(1);
-	//glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Color));
-
-
-	////mapowanie textury
-	//glEnableVertexAttribArray(2);
-	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, TexCoords));
+	//kolor
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Color));
 
 
-	////index textury
-	//glEnableVertexAttribArray(3);
-	//glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, TexID));
+	//mapowanie textury
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, TexCoords));
 
 
-	//std::array<Vertex, 5> my_vertices;
-	//Vertex* my_buffer = my_vertices.data();
-	//my_buffer = CreateLine(my_buffer, { 0,15 }, { 15,15 }, { 15,0 }, { 0,0 });
-	//glBufferSubData(GL_ARRAY_BUFFER,0, my_vertices.size() * sizeof(Vertex), my_vertices.data());
-	//
+	//index textury
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, TexID));
 
-	//
-	//float my_indices[] =
-	//{
- //		0.0f,1.0f,2.0f,3.0f
-	//};
-	//glCreateBuffers(1, &m_LineIB);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_LineIB);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float)*4, my_indices, GL_STATIC_DRAW);
-	//
-	//glDrawArrays(GL_LINE_STRIP, 0, 5);
+
+	std::array<Vertex, 8> my_vertices;
+	Vertex* my_buffer = my_vertices.data();
+	my_buffer = CreateLine(my_buffer, { 0,15 }, { 15,15 }, { 15,0 }, { 0,0 });
+	glBufferSubData(GL_ARRAY_BUFFER,0, my_vertices.size() * sizeof(Vertex), my_vertices.data());
+	
+
+	
+	float my_indices[] =
+	{
+ 		0.0f,1.0f,2.0f,3.0f,4.0f,5.0f,6.0f,7.0f
+	};
+	glCreateBuffers(1, &m_LineIB);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_LineIB);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float)*7, my_indices, GL_STATIC_DRAW);
+	
+	glDrawArrays(GL_LINE_STRIP, 0, 8);
 
 
 	
@@ -415,7 +438,14 @@ void SandboxLayer::OnUpdate(Timestep ts)
 void SandboxLayer::OnImGuiRender()
 {
 
+	ImGui::Begin("Options");
 
+	if (ImGui::Button("Zwolnienie blokady")) {
+
+		LottoToggler = !LottoToggler;
+	}
+
+	ImGui::End();
 	/*ImGui::Begin("Controls");
 	ImGui::DragFloat2("Quad Position", m_QuadPosition, 0.1f);
 	ImGui::End();*/

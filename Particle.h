@@ -3,6 +3,8 @@
 #include <random>
 #include <vector>
 #include <cmath>
+extern bool LottoToggler;
+
 struct Vec2
 {
 	float x, y;

@@ -15,9 +15,10 @@ struct Vertex
 	float TexID;
 };
 
+
+
 class Particle
 {
-
 public:
 	glm::vec2 m_StartPos;
 	Vertex  m_Vertex[4];
@@ -35,6 +36,7 @@ public:
 	
 
 public:
+	
 	
 	const float getCurrentVelocity();
 	const void getE() {

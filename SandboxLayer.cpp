@@ -1,8 +1,10 @@
 #include "SandboxLayer.h"
 #include <algorithm>
+#include "GLCore/Core/Input.h"
+#include "GLCore/Core/KeyCodes.h"
 using namespace GLCore;
 using namespace GLCore::Utils;
-const size_t NumsofParticles =50;
+const size_t NumsofParticles =1000;
 const size_t MaxParticleVertexCount = NumsofParticles * 4;
 const size_t MaxParticleIndexCount = NumsofParticles* 6;
 const float BaseSize = 0.5f;
@@ -47,7 +49,7 @@ void SandboxLayer::OnAttach()
 	
 	EnableGLDebugging();
 
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -72,11 +74,11 @@ void SandboxLayer::OnAttach()
 	glBindVertexArray(m_QuadVA);
 	glCreateBuffers(1, &m_QuadVB);
 	glBindBuffer(GL_ARRAY_BUFFER, m_QuadVB);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*MaxParticleVertexCount, nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*(MaxParticleVertexCount+4), nullptr, GL_DYNAMIC_DRAW);
 
-	uint32_t indices[MaxParticleIndexCount];
+	uint32_t indices[(MaxParticleIndexCount+6)];
 	uint32_t offset = 0;
-	for (size_t i = 0; i < MaxParticleIndexCount; i += 6)
+	for (size_t i = 0; i < (MaxParticleIndexCount+6); i += 6)
 	{
 		indices[i + 0] = 0 + offset;
 		indices[i + 1] = 1 + offset;
@@ -151,6 +153,7 @@ void SandboxLayer::OnAttach()
 	std::mt19937 mt(rd());
 	std::uniform_real_distribution<float> dist(2.1*bufSize, 3*bufSize);
 
+
 	for (size_t i = 0; i < NumsofParticles; ++i)
 	{
 
@@ -210,10 +213,10 @@ void SandboxLayer::OnAttach()
 
 	// Init here
 
-	m_txt1 = LoadTexture("assets/textures/txt3.png");
-	m_txt2 = LoadTexture("assets/textures/txt3.png");
-	m_txt3 = LoadTexture("assets/textures/txt3.png");
-
+	m_txt1 = LoadTexture("assets/textures/wb.png");
+	m_txt2 = LoadTexture("assets/textures/wb.png");
+	m_txt3 = LoadTexture("assets/textures/wb.png");
+	m_CameraController.SetZoomLevel(0.0f);
 
 
 
@@ -289,6 +292,7 @@ void SandboxLayer::OnUpdate(Timestep ts)
 {
 	m_CameraController.OnUpdate(ts);
 	
+	
 
 
 
@@ -298,17 +302,26 @@ void SandboxLayer::OnUpdate(Timestep ts)
 	glBindVertexArray(m_QuadVA);
 
 	 std::vector<Vertex>Vertices;
-	Vertices.reserve(MaxParticleVertexCount);
+	Vertices.reserve(MaxParticleVertexCount+4);
+	std::pair<double, double>CurrentMousePosition = GLCore::Input::GetMousePosition();
+	m_Particles.push_back(Particle ({ (CurrentMousePosition.first-550.0f	)/20.0f ,(-(CurrentMousePosition.second-550.0f)		)/20.0f }, 1.0f));
+	//CreateQuad(&MouseParticle, (CurrentMousePosition.first -645.0f)/100.0f, (CurrentMousePosition.second - 470.0f)/100.0f, 2.0f, 1.0f);
+	
+	//for (size_t i = 0; i < NumsofParticles+1; ++i)
+	//{
 
-	for (size_t i = 0; i < NumsofParticles; ++i)
+	//	std::copy(m_Particles[i].GetBegVertex(), m_Particles[i].GetBegVertex()+4 , std::back_inserter(Vertices));
+
+	//}
+	for (size_t i = 0; i < NumsofParticles+1 ; ++i)
 	{
 
-		std::copy(m_Particles[i].GetBegVertex(), m_Particles[i].GetBegVertex()+4 , std::back_inserter(Vertices));
+			std::copy(m_Particles[i].GetBegVertex(), m_Particles[i].GetBegVertex()+4 , std::back_inserter(Vertices));
 
 	}
 	//Set dynamic vertex buffer
 	glBindBuffer(GL_ARRAY_BUFFER, m_QuadVB);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, MaxParticleVertexCount*sizeof(Vertex), Vertices.data());
+	glBufferSubData(GL_ARRAY_BUFFER, 0, (MaxParticleVertexCount+4)*sizeof(Vertex), Vertices.data());
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -321,17 +334,20 @@ void SandboxLayer::OnUpdate(Timestep ts)
 	SetUniformMat4(m_Shader->GetRendererID(), "u_ViewProjection", vp);
 	SetUniformMat4(m_Shader->GetRendererID(), "u_Transform", glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));
 
+
+
 	glBindVertexArray(m_QuadVA);
 
 	for (auto& i : m_Particles)
 	{
 		
-		i.Update(0.001f);
+		i.Update(0.02f);
 
 	}
 	SweepAndPrune(m_Particles);
-	glDrawElements(GL_TRIANGLES, MaxParticleIndexCount, GL_UNSIGNED_INT, nullptr);
-	
+	glDrawElements(GL_TRIANGLES, (MaxParticleIndexCount+6), GL_UNSIGNED_INT, nullptr);
+	m_Particles.pop_back();
+
 
 	
 

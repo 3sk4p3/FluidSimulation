@@ -4,11 +4,12 @@
 #include "GLCore/Core/KeyCodes.h"
 using namespace GLCore;
 using namespace GLCore::Utils;
-const size_t NumsofParticles =1000;
+const size_t NumsofParticles =100;
 const size_t MaxParticleVertexCount = NumsofParticles * 4;
 const size_t MaxParticleIndexCount = NumsofParticles* 6;
-const float BaseSize = 0.5f;
+const float BaseSize = 1.5f;
 bool	LottoToggler = false;
+bool	ElevatorToggler = false;
 
 
 
@@ -361,13 +362,13 @@ void SandboxLayer::OnUpdate(Timestep ts)
 
 	glBindVertexArray(m_QuadVA);
 
+	SweepAndPrune(m_Particles);
 	for (auto& i : m_Particles)
 	{
 		
-		i.Update(0.02f);
+		i.Update(0.002f);
 
 	}
-	SweepAndPrune(m_Particles);
 	glDrawElements(GL_TRIANGLES, (MaxParticleIndexCount+6), GL_UNSIGNED_INT, nullptr);
 	m_Particles.pop_back();
 
@@ -444,7 +445,10 @@ void SandboxLayer::OnImGuiRender()
 
 		LottoToggler = !LottoToggler;
 	}
+	if (ImGui::Button("Winda")) {
 
+		ElevatorToggler = !ElevatorToggler;
+	}
 	ImGui::End();
 	/*ImGui::Begin("Controls");
 	ImGui::DragFloat2("Quad Position", m_QuadPosition, 0.1f);

@@ -22,6 +22,11 @@ Particle::~Particle()
 {
 	//czy tu nie powinno czegows byc?
 }
+float clamp(float val, float min, float max) {
+	if (val < min) return min;
+	else if (val > max) return max;
+	else return val;
+}
 
 void Particle::Update(float dt,std::vector<Obstacle>&Obstacles)
 {
@@ -43,7 +48,7 @@ void Particle::Update(float dt,std::vector<Obstacle>&Obstacles)
 		//rectangular shape equations
 
 		//winda jedzie w gore
-		for (size_t Obs=0;Obs<Obstacles.size()-1;++Obs)
+		for (size_t Obs=0;Obs<Obstacles.size();++Obs)
 		{
 			//0 i 1 
 
@@ -57,7 +62,7 @@ void Particle::Update(float dt,std::vector<Obstacle>&Obstacles)
 			);
 			// get difference vector between both centers
 			glm::vec2 difference = center - aabb_center;
-			glm::vec2 clamped = glm::clamp(difference, -aabb_half_extents, aabb_half_extents);
+			glm::vec2 clamped = clamp(difference, -aabb_half_extents, aabb_half_extents);
 			// add clamped value to AABB_center and we get the value of box closest to circle
 			glm::vec2 closest = aabb_center + clamped;
 			// retrieve vector between center circle and closest point AABB and check if length <= radius
@@ -65,7 +70,14 @@ void Particle::Update(float dt,std::vector<Obstacle>&Obstacles)
 			float len = glm::length(difference);
 			if (glm::length(difference) < m_Size / 2)
 			{
-				int xd = 2;
+
+				
+				m_CurrentPosition = m_CurrentPosition - (difference / glm::length(difference))*0.005f;
+				
+				//if (center.x != closest.x)m_CurrentPosition.x = closest.x;
+				//else if (center.y != closest.y)m_CurrentPosition.y = closest.y;
+
+
 			}
 
 
@@ -73,7 +85,7 @@ void Particle::Update(float dt,std::vector<Obstacle>&Obstacles)
 		if (ElevatorToggler)
 		{
 
-			if (FloorLevel > 15.0f) {
+			if (FloorLevel > 18.0f) {
 				FloorLevel = 0.0f;
 				ElevatorToggler = false;
 			}
@@ -83,14 +95,14 @@ void Particle::Update(float dt,std::vector<Obstacle>&Obstacles)
 
 		//jak jest rura zamknieta
 
-		if (m_CurrentPosition.y>15.0f&&m_CurrentPosition.x>15.0f )
+	/*	if (m_CurrentPosition.y>15.0f&&m_CurrentPosition.x>15.0f )
 
 		{
 			glm::vec2 left = { 50.0f, 0.0f };
 				m_Acceleration += left;
-		}
+		}*/
 
-	
+		if (m_CurrentPosition.y < FloorLevel)m_CurrentPosition.y = FloorLevel;
 		
 		m_Acceleration += m_Gravity;
 		m_CurrentVelocity = m_CurrentPosition - m_PreviousPosition;
@@ -98,38 +110,37 @@ void Particle::Update(float dt,std::vector<Obstacle>&Obstacles)
 		m_CurrentPosition = m_CurrentPosition + m_CurrentVelocity - m_Acceleration * sub_dt * sub_dt;
 		//odbitka od rury
 		//jak rura zamkmnieta, to ma sie odjbjac od niej.
-		if (!LottoToggler&&m_CurrentPosition.x < 15.0f)m_CurrentPosition.x = 15.0f;
+		//if (!LottoToggler&&m_CurrentPosition.x < 15.0f)m_CurrentPosition.x = 15.0f;
 
 
-		
-		else
-		{
+		//
+		//else
+		//{
 
 
-				if (m_CurrentPosition.x < 5.0f&& m_CurrentPosition.y < 35.0f)m_CurrentPosition.x = 5.0f;
-				if (m_CurrentPosition.x < 15.0f)
-				{
+		//		if (m_CurrentPosition.x < 15.0f)
+		//		{
 
-				//if ((m_CurrentPosition.x >= 15.0f - m_Size)&&(m_CurrentPosition.y<=15.0f))m_CurrentPosition.x = 15.0f - m_Size;
-				}
-			
-				if (m_CurrentPosition.y < FloorLevel)m_CurrentPosition.y = FloorLevel;
-		}
-		if (m_CurrentPosition.x > 30.0f-m_Size )m_CurrentPosition.x = 30.0f-m_Size ;
+		//		//if ((m_CurrentPosition.x >= 15.0f - m_Size)&&(m_CurrentPosition.y<=15.0f))m_CurrentPosition.x = 15.0f - m_Size;
+		//		}
+		//	
+		//		if (m_CurrentPosition.y < FloorLevel)m_CurrentPosition.y = FloorLevel;
+		//}
+		//if (m_CurrentPosition.x > 30.0f-m_Size )m_CurrentPosition.x = 30.0f-m_Size ;
 
 
-		if (m_CurrentPosition.x > 15.0f-m_Size)
-		{
+		//if (m_CurrentPosition.x > 15.0f-m_Size)
+		//{
 
-			if (m_CurrentPosition.y < 15.0f - m_Size * 0.25f) m_CurrentPosition.x = 15.0f - m_Size;
-			else
-			{
-				if (m_CurrentPosition.y < (m_CurrentPosition.x - m_Size) / 2.0f + 7.5f + m_Size * 0.75f)
-					m_CurrentPosition.y = (m_CurrentPosition.x - m_Size) / 2.0f + 7.5f + m_Size * 0.75f;
-				else if (m_CurrentPosition.y > (m_CurrentPosition.x - m_Size) / 2.0f + 9.8f)
-					m_CurrentPosition.y = (m_CurrentPosition.x - m_Size) / 2.0f + 9.8f;
-			}
-		}
+		//	if (m_CurrentPosition.y < 15.0f - m_Size * 0.25f) m_CurrentPosition.x = 15.0f - m_Size;
+		//	else
+		//	{
+		//		if (m_CurrentPosition.y < (m_CurrentPosition.x - m_Size) / 2.0f + 7.5f + m_Size * 0.75f)
+		//			m_CurrentPosition.y = (m_CurrentPosition.x - m_Size) / 2.0f + 7.5f + m_Size * 0.75f;
+		//		else if (m_CurrentPosition.y > (m_CurrentPosition.x - m_Size) / 2.0f + 9.8f)
+		//			m_CurrentPosition.y = (m_CurrentPosition.x - m_Size) / 2.0f + 9.8f;
+		//	}
+		//}
 		m_Acceleration = {};
 	}
 

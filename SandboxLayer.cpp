@@ -63,8 +63,14 @@ void SandboxLayer::OnAttach()
 	
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	
-	m_Obstacle.push_back(Obstacle({ 0.0f,0.0f }, { 15.0f,0.0f }, { 15.0f,1.0f }, { 0.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f }));
+	m_Obstacle.push_back(Obstacle({ 0.0f,0.0f }, { 50.0f,0.0f }, { 50.0f,1.0f }, { 0.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f }));
 	m_Obstacle.push_back(Obstacle({ 0.0f,0.0f }, { 1.0f,0.0f }, { 1.0f,35.0f }, { 0.0f,35.0f }, { 0.0f,1.0f,1.0f,1.0f }));
+	m_Obstacle.push_back(Obstacle({ 24.0f,0.0f }, { 25.0f,0.0f }, { 25.0f,35.0f }, { 24.0f,35.0f }, { 0.0f,1.0f,1.0f,1.0f }));
+	
+	
+	m_Obstacle.push_back(Obstacle({ 15.0f,15.0f }, { 30.0f,15.0f }, { 30.0f,16.0f }, { 15.0f,16.0f }, { 0.0f,1.0f,1.0f,1.0f }));
+
+	
 
 
 

@@ -17,9 +17,9 @@ public:
 	 inline float GetHeight() { return m_Height; }
 	 inline float GetWidth() { return m_Width; }
 	 inline oVertex* GetVertices() { return m_Vertex; }
+	oVertex  m_Vertex[4];
 private:
 	float m_Width, m_Height;
 	glm::vec4 m_Color;
-	oVertex  m_Vertex[4];
 
 };

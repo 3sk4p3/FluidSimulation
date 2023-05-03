@@ -3,6 +3,7 @@
 #include <random>
 #include <vector>
 #include <cmath>
+#include "Obstacle.h"
 extern bool LottoToggler;
 extern bool ElevatorToggler;
 
@@ -49,7 +50,7 @@ public:
 	
 	Particle(glm::vec2 StartPos,float I_size);
 	~Particle();
-	void Update(float dt);
+	void Update(float dt, std::vector <Obstacle>& Obstacles );
 	const Vertex* GetBegVertex() { return m_Vertex; }
 	const glm::vec2 GetCastedShadowX() { return glm::vec2(m_CurrentPosition.x, m_CurrentPosition.x + m_Size); }
 	const glm::vec2 GetCastedShadowY() { return glm::vec2(m_CurrentPosition.y, m_CurrentPosition.y+ m_Size); }

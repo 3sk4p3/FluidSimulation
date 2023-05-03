@@ -23,7 +23,7 @@ Particle::~Particle()
 	//czy tu nie powinno czegows byc?
 }
 
-void Particle::Update(float dt)
+void Particle::Update(float dt,std::vector<Obstacle>&Obstacles)
 {
 	
 	const int sub_steps = 8;
@@ -43,6 +43,33 @@ void Particle::Update(float dt)
 		//rectangular shape equations
 
 		//winda jedzie w gore
+		for (size_t Obs=0;Obs<Obstacles.size()-1;++Obs)
+		{
+			//0 i 1 
+
+			// get center point circle first 
+			glm::vec2 center(m_CurrentPosition.x+m_Size/2, m_CurrentPosition.y + m_Size / 2);
+			// calculate AABB info (center, half-extents)
+			glm::vec2 aabb_half_extents(Obstacles[ Obs].GetWidth() / 2, Obstacles[Obs].GetHeight() / 2);
+			glm::vec2 aabb_center(
+				Obstacles[Obs].GetVertices()[0].Position.x + aabb_half_extents.x,
+				Obstacles[Obs].GetVertices()[0].Position.y + aabb_half_extents.y
+			);
+			// get difference vector between both centers
+			glm::vec2 difference = center - aabb_center;
+			glm::vec2 clamped = glm::clamp(difference, -aabb_half_extents, aabb_half_extents);
+			// add clamped value to AABB_center and we get the value of box closest to circle
+			glm::vec2 closest = aabb_center + clamped;
+			// retrieve vector between center circle and closest point AABB and check if length <= radius
+			difference = closest - center;
+			float len = glm::length(difference);
+			if (glm::length(difference) < m_Size / 2)
+			{
+				int xd = 2;
+			}
+
+
+		}
 		if (ElevatorToggler)
 		{
 
@@ -94,13 +121,14 @@ void Particle::Update(float dt)
 		if (m_CurrentPosition.x > 15.0f-m_Size)
 		{
 
-		if(m_CurrentPosition.y<15.0f-m_Size)m_CurrentPosition.x = 15.0f - m_Size;
-		else if (m_CurrentPosition.y>15.0f)
-		{
-
-			if (m_CurrentPosition.y < m_CurrentPosition.x / 2.0f + 7.7f)m_CurrentPosition.y = m_CurrentPosition.x / 2.0f + 7.7f;
-			else if (m_CurrentPosition.y > m_CurrentPosition.x / 2.0f + 9.5f)m_CurrentPosition.y = m_CurrentPosition.x / 2.0f + 9.5f;
-		}
+			if (m_CurrentPosition.y < 15.0f - m_Size * 0.25f) m_CurrentPosition.x = 15.0f - m_Size;
+			else
+			{
+				if (m_CurrentPosition.y < (m_CurrentPosition.x - m_Size) / 2.0f + 7.5f + m_Size * 0.75f)
+					m_CurrentPosition.y = (m_CurrentPosition.x - m_Size) / 2.0f + 7.5f + m_Size * 0.75f;
+				else if (m_CurrentPosition.y > (m_CurrentPosition.x - m_Size) / 2.0f + 9.8f)
+					m_CurrentPosition.y = (m_CurrentPosition.x - m_Size) / 2.0f + 9.8f;
+			}
 		}
 		m_Acceleration = {};
 	}

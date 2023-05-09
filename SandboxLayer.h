@@ -4,6 +4,7 @@
 #include <GLCoreUtils.h>
 #include "stb_image/stb_image.h"
 #include "Particle.h"
+#include "Obstacle.h"
 #include <vector>
 
 
@@ -20,6 +21,9 @@ public:
 	virtual void OnImGuiRender() override;
 private:
 	std::vector <Particle>m_Particles;
+	std::vector <Obstacle>m_Obstacle;
+
+
 	GLCore::Utils::Shader* m_Shader;
 	GLCore::Utils::Shader* m_CircleShader;
 	GLCore::Utils::OrthographicCameraController m_CameraController;

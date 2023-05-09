@@ -22,92 +22,135 @@ Particle::~Particle()
 {
 	//czy tu nie powinno czegows byc?
 }
+float clamp(float val, float min, float max) {
+	if (val < min) return min;
+	else if (val > max) return max;
+	else return val;
+}
 
-void Particle::Update(float dt)
+void Particle::Update(float dt,std::vector<Obstacle>&Obstacles)
 {
 	
 	const int sub_steps = 8;
 	const float sub_dt = dt / static_cast<float>(sub_steps);
-	for (size_t i = 0; i < sub_steps; i++)
+	if (LottoToggler)
 	{
-		//circular shape equations
-	/*	const glm::vec2 position{ 7.5f,7.5f };
-		const float radius = 10.0f;
-		glm::vec2 to_obj = m_CurrentPosition - position;
-		const float dist = glm::length(to_obj);
-		if (dist > radius - m_Size / 2)
+
+
+		for (size_t i = 0; i < sub_steps; i++)
 		{
-			const glm::vec2 n = to_obj / dist;
-			m_CurrentPosition = position + n * (radius - m_Size / 2);
-		}*/
-		//rectangular shape equations
+			//circular shape equations
+		/*	const glm::vec2 position{ 7.5f,7.5f };
+			const float radius = 10.0f;
+			glm::vec2 to_obj = m_CurrentPosition - position;
+			const float dist = glm::length(to_obj);
+			if (dist > radius - m_Size / 2)
+			{
+				const glm::vec2 n = to_obj / dist;
+				m_CurrentPosition = position + n * (radius - m_Size / 2);
+			}*/
+			//rectangular shape equations
 
-		//winda jedzie w gore
-		if (ElevatorToggler)
-		{
+			//winda jedzie w gore
+			for (size_t Obs = 0; Obs < Obstacles.size(); ++Obs)
+			{
+				//0 i 1 
 
-			if (FloorLevel > 15.0f) {
-				FloorLevel = 0.0f;
-				ElevatorToggler = false;
-			}
-			FloorLevel += 0.00001f;
-
-		}
-
-		//jak jest rura zamknieta
-
-		if (m_CurrentPosition.y>15.0f&&m_CurrentPosition.x>15.0f )
-
-		{
-			glm::vec2 left = { 50.0f, 0.0f };
-				m_Acceleration += left;
-		}
-
-	
-		
-		m_Acceleration += m_Gravity;
-		m_CurrentVelocity = m_CurrentPosition - m_PreviousPosition;
-		m_PreviousPosition = m_CurrentPosition;
-		m_CurrentPosition = m_CurrentPosition + m_CurrentVelocity - m_Acceleration * sub_dt * sub_dt;
-		//odbitka od rury
-		//jak rura zamkmnieta, to ma sie odjbjac od niej.
-		if (!LottoToggler&&m_CurrentPosition.x < 15.0f)m_CurrentPosition.x = 15.0f;
-
-
-		
-		else
-		{
-
-
-				if (m_CurrentPosition.x < 5.0f&& m_CurrentPosition.y < 35.0f)m_CurrentPosition.x = 5.0f;
-				if (m_CurrentPosition.x < 15.0f)
+				// get center point circle first 
+				glm::vec2 center(m_CurrentPosition.x + m_Size / 2, m_CurrentPosition.y + m_Size / 2);
+				// calculate AABB info (center, half-extents)
+				glm::vec2 aabb_half_extents(Obstacles[Obs].GetWidth() / 2, Obstacles[Obs].GetHeight() / 2);
+				glm::vec2 aabb_center(
+					Obstacles[Obs].GetVertices()[0].Position.x + aabb_half_extents.x,
+					Obstacles[Obs].GetVertices()[0].Position.y + aabb_half_extents.y
+				);
+				// get difference vector between both centers
+				glm::vec2 difference = center - aabb_center;
+				glm::vec2 clamped = clamp(difference, -aabb_half_extents, aabb_half_extents);
+				// add clamped value to AABB_center and we get the value of box closest to circle
+				glm::vec2 closest = aabb_center + clamped;
+				// retrieve vector between center circle and closest point AABB and check if length <= radius
+				difference = closest - center;
+				float len = glm::length(difference);
+				if (glm::length(difference) < m_Size / 2)
 				{
 
-				//if ((m_CurrentPosition.x >= 15.0f - m_Size)&&(m_CurrentPosition.y<=15.0f))m_CurrentPosition.x = 15.0f - m_Size;
+
+					m_CurrentPosition = m_CurrentPosition - (difference / glm::length(difference)) * 0.009f;
+
+					//if (center.x != closest.x)m_CurrentPosition.x = closest.x;
+					//else if (center.y != closest.y)m_CurrentPosition.y = closest.y;
+
+
 				}
-			
-				if (m_CurrentPosition.y < FloorLevel)m_CurrentPosition.y = FloorLevel;
+
+
+			}
+			if (ElevatorToggler)
+			{
+
+				if (FloorLevel > 18.0f) {
+					FloorLevel = 0.0f;
+					ElevatorToggler = false;
+				}
+				FloorLevel += 0.000002f;
+
+			}
+
+			//jak jest rura zamknieta
+
+		/*	if (m_CurrentPosition.y>15.0f&&m_CurrentPosition.x>15.0f )
+
+			{
+				glm::vec2 left = { 50.0f, 0.0f };
+					m_Acceleration += left;
+			}*/
+
+			if (m_CurrentPosition.y < FloorLevel && m_CurrentPosition.x < 18.0f)m_CurrentPosition.y = FloorLevel;
+
+			m_Acceleration += m_Gravity;
+			m_CurrentVelocity = m_CurrentPosition - m_PreviousPosition;
+			m_PreviousPosition = m_CurrentPosition;
+			m_CurrentPosition = m_CurrentPosition + m_CurrentVelocity - m_Acceleration * sub_dt * sub_dt;
+			//odbitka od rury
+			//jak rura zamkmnieta, to ma sie odjbjac od niej.
+			//if (!LottoToggler&&m_CurrentPosition.x < 15.0f)m_CurrentPosition.x = 15.0f;
+
+
+			//
+			//else
+			//{
+
+
+			//		if (m_CurrentPosition.x < 15.0f)
+			//		{
+
+			//		//if ((m_CurrentPosition.x >= 15.0f - m_Size)&&(m_CurrentPosition.y<=15.0f))m_CurrentPosition.x = 15.0f - m_Size;
+			//		}
+			//	
+			//		if (m_CurrentPosition.y < FloorLevel)m_CurrentPosition.y = FloorLevel;
+			//}
+			//if (m_CurrentPosition.x > 30.0f-m_Size )m_CurrentPosition.x = 30.0f-m_Size ;
+
+
+			//if (m_CurrentPosition.x > 15.0f-m_Size)
+			//{
+
+			//	if (m_CurrentPosition.y < 15.0f - m_Size * 0.25f) m_CurrentPosition.x = 15.0f - m_Size;
+			//	else
+			//	{
+			//		if (m_CurrentPosition.y < (m_CurrentPosition.x - m_Size) / 2.0f + 7.5f + m_Size * 0.75f)
+			//			m_CurrentPosition.y = (m_CurrentPosition.x - m_Size) / 2.0f + 7.5f + m_Size * 0.75f;
+			//		else if (m_CurrentPosition.y > (m_CurrentPosition.x - m_Size) / 2.0f + 9.8f)
+			//			m_CurrentPosition.y = (m_CurrentPosition.x - m_Size) / 2.0f + 9.8f;
+			//	}
+			//}
+			m_Acceleration = {};
 		}
-		if (m_CurrentPosition.x > 30.0f-m_Size )m_CurrentPosition.x = 30.0f-m_Size ;
 
 
-		if (m_CurrentPosition.x > 15.0f-m_Size)
-		{
-
-		if(m_CurrentPosition.y<15.0f-m_Size)m_CurrentPosition.x = 15.0f - m_Size;
-		else if (m_CurrentPosition.y>15.0f)
-		{
-
-			if (m_CurrentPosition.y < m_CurrentPosition.x / 2.0f + 7.7f)m_CurrentPosition.y = m_CurrentPosition.x / 2.0f + 7.7f;
-			else if (m_CurrentPosition.y > m_CurrentPosition.x / 2.0f + 9.5f)m_CurrentPosition.y = m_CurrentPosition.x / 2.0f + 9.5f;
-		}
-		}
-		m_Acceleration = {};
+		CreateQuad(this, m_CurrentPosition.x, m_CurrentPosition.y, 1.0f, m_Size);
 	}
-
-
-	CreateQuad(this, m_CurrentPosition.x, m_CurrentPosition.y, 1.0f, m_Size);
-
 }
 
 

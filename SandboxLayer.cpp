@@ -4,7 +4,7 @@
 #include "GLCore/Core/KeyCodes.h"
 using namespace GLCore;
 using namespace GLCore::Utils;
-const size_t NumsofParticles =100;
+const size_t NumsofParticles =1000;
 const size_t MaxParticleVertexCount = NumsofParticles * 4;
 const size_t MaxParticleIndexCount = NumsofParticles* 6;
 const float BaseSize = 1.5f;
@@ -62,13 +62,34 @@ void SandboxLayer::OnAttach()
 	glUniform1iv(loc, 3, samplers);
 	
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-
+	
+	m_Obstacle.push_back(Obstacle({ 10.0f,0.0f }, { 50.0f,0.0f }, { 50.0f,1.0f }, { 10.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f }));
+	m_Obstacle.push_back(Obstacle({ 10.0f,0.0f }, { 11.0f,0.0f }, { 11.0f,35.0f }, { 10.0f,35.0f }, { 0.0f,1.0f,1.0f,1.0f }));
+	m_Obstacle.push_back(Obstacle({ 18.0f,0.0f }, { 19.0f,0.0f }, { 19.0f,16.0f }, { 18.0f,16.0f }, { 0.0f,1.0f,1.0f,1.0f }));
 	
 	
+	m_Obstacle.push_back(Obstacle({ 18.0f,15.0f }, { 25.0f,15.0f }, { 25.0f,16.0f }, { 18.0f,16.0f }, { 0.0f,1.0f,1.0f,1.0f }));
+
 	
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	//~~~~~~~~~~~~~~~~~~~~CIRCLES~~~~~~~~~~~~~~~~~~~~~~
 	glCreateVertexArrays(1, &m_QuadVA);
 	glBindVertexArray(m_QuadVA);
 	glCreateBuffers(1, &m_QuadVB);
@@ -98,7 +119,6 @@ void SandboxLayer::OnAttach()
 
 
 
-	
 
 	float _x = 0.45f;
 	float _y = 14.0f;
@@ -159,7 +179,7 @@ void SandboxLayer::OnAttach()
 
 
 
-		m_Particles.push_back(Particle({ _x+16.0f ,_y+16.0f }, bufSize));
+		m_Particles.push_back(Particle({ _x+12.0f ,_y+12.0f }, bufSize));
 		_x += dist(mt);
 		if (_x >=15.0f -bufSize)
 		{
@@ -249,64 +269,44 @@ void SandboxLayer::OnEvent(Event& event)
 	// Events here
 }
 
-static Vertex* CreateLine(Vertex* target, glm::vec2 topL, glm::vec2 topR,glm::vec2 botR, glm::vec2 botL)
+
+static oVertex* CreateLine(oVertex* target)
 {
 
-	if (!LottoToggler)
-	{
-
-	target->Position = { 15.0f,15.0f,0.0f };//15 15
+	
+	//target->Position = { botL.x,botL.y,0.0f };//15 15
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
 	target->TexCoords = { 0.0f,0.0f };
 	target->TexID = { 2.0f };
+	float startx = target->Position.x;
+	float starty = target->Position.y;
 	++target;
-	}
+	
 
-	target->Position = { 15.0f,17.5f,0.0f };//15 15
-	target->Color = { 1.0f,0.0f,0.0f,1.0f };
-	target->TexCoords = { 0.0f,0.0f };
-	target->TexID = { 2.0f };
-	++target;
-
-	target->Position = { 30.0f,25.0f,0.0f };//15 15
+	//target->Position = { botR.x,botR.y,0.0f };//15 15
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
 	target->TexCoords = { 0.0f,0.0f };
 	target->TexID = { 2.0f };
 	++target;
 
-	target->Position = { 30.0f,22.5f,0.0f };//15 15
+	//target->Position = { topR.x,topR.y,0.0f };//15 15
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
 	target->TexCoords = { 0.0f,0.0f };
 	target->TexID = { 2.0f };
 	++target;
 
-
-
-	target->Position = { topR.x,topR.y,0.0f };//15 15
-	target->Color = { 1.0f,0.0f,0.0f,1.0f };
-	target->TexCoords = { 0.0f,0.0f };
-	target->TexID = { 2.0f };
-	++target;
-
-	target->Position = { botR.x,botR.y,0.0f };//15 0
+	//target->Position = { topL.x,topL.y,0.0f};//15 15
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
 	target->TexCoords = { 0.0f,0.0f };
 	target->TexID = { 2.0f };
 	++target;
 
 
-	target->Position = { 5.0f,0.0f,0.0f };// 0 0
+	target->Position = { startx,starty,0.0f };//15 15
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
 	target->TexCoords = { 0.0f,0.0f };
 	target->TexID = { 2.0f };
 	++target;
-
-	target->Position = { 5.0f,15.0f,0.0f }; //0 15
-	target->Color = { 1.0f,0.0f,0.0f,1.0f };
-	target->TexCoords = { 0.0f,0.0f };
-	target->TexID = { 2.0f };
-	++target;
-
 	return target;
 }
 
@@ -361,77 +361,66 @@ void SandboxLayer::OnUpdate(Timestep ts)
 
 
 	glBindVertexArray(m_QuadVA);
-
+	
 	SweepAndPrune(m_Particles);
 	for (auto& i : m_Particles)
 	{
 		
-		i.Update(0.002f);
+		i.Update(0.002f,m_Obstacle);
 
 	}
 	glDrawElements(GL_TRIANGLES, (MaxParticleIndexCount+6), GL_UNSIGNED_INT, nullptr);
 	m_Particles.pop_back();
 
 
-	
 
-	// Render here
-
-
-
-
-	// my shot at lines
 
 	glCreateVertexArrays(1, &m_LineVA);
 	glBindVertexArray(m_LineVA);
 	glCreateBuffers(1, &m_LineVB);
 	glBindBuffer(GL_ARRAY_BUFFER, m_LineVB);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * 8, nullptr, GL_DYNAMIC_DRAW);
-	//glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-
-
-
+	glBufferData(GL_ARRAY_BUFFER, sizeof(oVertex) * 5, nullptr, GL_DYNAMIC_DRAW);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Position));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(oVertex), (const void*)offsetof(oVertex, Position));
 
-	//kolor
+	////kolor
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Color));
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(oVertex), (const void*)offsetof(oVertex, Color));
 
 
-	//mapowanie textury
+	////mapowanie textury
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, TexCoords));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(oVertex), (const void*)offsetof(oVertex, TexCoords));
 
 
-	//index textury
+	////index textury
 	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, TexID));
+	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(oVertex), (const void*)offsetof(oVertex, TexID));
 
 
-	std::array<Vertex, 8> my_vertices;
-	Vertex* my_buffer = my_vertices.data();
-	my_buffer = CreateLine(my_buffer, { 0,15 }, { 15,15 }, { 15,0 }, { 0,0 });
-	glBufferSubData(GL_ARRAY_BUFFER,0, my_vertices.size() * sizeof(Vertex), my_vertices.data());
-	
-
-	
-	float my_indices[] =
+	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ÓBSTACLES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	for (size_t i = 0; i < m_Obstacle.size(); ++i)
 	{
- 		0.0f,1.0f,2.0f,3.0f,4.0f,5.0f,6.0f,7.0f
-	};
-	glCreateBuffers(1, &m_LineIB);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_LineIB);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float)*7, my_indices, GL_STATIC_DRAW);
+	std::vector<oVertex>my_vertices;
+	my_vertices.resize(5);
+	my_vertices[0] = m_Obstacle[i].GetBegVertex()[0] ;
+	my_vertices[1] = m_Obstacle[i].GetBegVertex()[1] ;
+	my_vertices[2] = m_Obstacle[i].GetBegVertex()[2] ;
+	my_vertices[3] = m_Obstacle[i].GetBegVertex()[3] ;
+	my_vertices[4] = m_Obstacle[i].GetBegVertex()[0];
+//	oVertex* my_buffer = my_vertces.data();
+	//my_buffer = CreateLine(my_buffer);
+	glBufferSubData(GL_ARRAY_BUFFER,0, my_vertices.size() * sizeof(oVertex), my_vertices.data());
+	//float my_indices[] =
+	//{
+	//0.0f
+	//};
+	//glCreateBuffers(1, &m_LineIB);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_LineIB);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float)*4, my_indices, GL_STATIC_DRAW);
 	
-	glDrawArrays(GL_LINE_STRIP, 0, 8);
-
-
-	
-
-
-
-
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	}
 
 
 }

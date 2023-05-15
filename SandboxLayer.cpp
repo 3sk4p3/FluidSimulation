@@ -4,17 +4,20 @@
 #include "GLCore/Core/KeyCodes.h"
 using namespace GLCore;
 using namespace GLCore::Utils;
-const size_t NumsofParticles =1000;
+const size_t NumsofParticles = 100;
 const size_t MaxParticleVertexCount = NumsofParticles * 4;
-const size_t MaxParticleIndexCount = NumsofParticles* 6;
+const size_t MaxParticleIndexCount = NumsofParticles * 6;
 const float BaseSize = 1.5f;
 bool	LottoToggler = false;
 bool	ElevatorToggler = false;
+bool	ResetToggler = false;
 
+glm::vec2 newObstaclePos;
+bool addObstacle = false;
 
 
 SandboxLayer::SandboxLayer()
-	: m_CameraController(16.0f / 9.0f,true)
+	: m_CameraController(16.0f / 9.0f, true)
 
 {
 
@@ -45,7 +48,7 @@ static GLuint LoadTexture(const std::string& path)
 
 void SandboxLayer::OnAttach()
 {
-	
+
 	EnableGLDebugging();
 
 	//glEnable(GL_DEPTH_TEST);
@@ -54,23 +57,25 @@ void SandboxLayer::OnAttach()
 
 	m_Shader = Shader::FromGLSLTextFiles(
 		"assets/shaders/test.vert.glsl",
-		"assets/shaders/test.frag.glsl"		
+		"assets/shaders/test.frag.glsl"
 	);
 	glUseProgram(m_Shader->GetRendererID());
 	auto loc = glGetUniformLocation(m_Shader->GetRendererID(), "u_Textures");
 	int samplers[3] = { 0,1,2 };
 	glUniform1iv(loc, 3, samplers);
-	
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-	
-	m_Obstacle.push_back(Obstacle({ 10.0f,0.0f }, { 50.0f,0.0f }, { 50.0f,1.0f }, { 10.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f }));
-	m_Obstacle.push_back(Obstacle({ 10.0f,0.0f }, { 11.0f,0.0f }, { 11.0f,35.0f }, { 10.0f,35.0f }, { 0.0f,1.0f,1.0f,1.0f }));
-	m_Obstacle.push_back(Obstacle({ 18.0f,0.0f }, { 19.0f,0.0f }, { 19.0f,16.0f }, { 18.0f,16.0f }, { 0.0f,1.0f,1.0f,1.0f }));
-	
-	
-	m_Obstacle.push_back(Obstacle({ 18.0f,15.0f }, { 25.0f,15.0f }, { 25.0f,16.0f }, { 18.0f,16.0f }, { 0.0f,1.0f,1.0f,1.0f }));
 
-	
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
+	m_Obstacle.push_back(Obstacle({ 10.0f,0.0f }, { 50.0f,0.0f }, { 50.0f,1.0f }, { 10.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f }, false));
+	m_Obstacle.push_back(Obstacle({ 49.0f,0.0f }, { 50.0f,0.0f }, { 50.0f,35.0f }, { 49.0f,35.0f }, { 1.0f,1.0f,1.0f,1.0f }, false));
+	m_Obstacle.push_back(Obstacle({ 10.0f,0.0f }, { 11.0f,0.0f }, { 11.0f,35.0f }, { 10.0f,35.0f }, { 0.0f,1.0f,1.0f,1.0f }, false));
+	m_Obstacle.push_back(Obstacle({ 18.0f,0.0f }, { 19.0f,0.0f }, { 19.0f,16.0f }, { 18.0f,16.0f }, { 0.0f,1.0f,1.0f,1.0f }, false));
+	m_Obstacle.push_back(Obstacle({ 10.0f,34.0f }, { 50.0f,34.0f }, { 50.0f,35.0f }, { 10.0f,35.0f }, { 0.0f,1.0f,1.0f,1.0f }, false));
+
+
+	m_Obstacle.push_back(Obstacle({ 18.0f,15.0f }, { 25.0f,15.0f }, { 25.0f,16.0f }, { 18.0f,16.0f }, { 0.0f,1.0f,1.0f,1.0f }, false));
+
+
 
 
 
@@ -94,11 +99,11 @@ void SandboxLayer::OnAttach()
 	glBindVertexArray(m_QuadVA);
 	glCreateBuffers(1, &m_QuadVB);
 	glBindBuffer(GL_ARRAY_BUFFER, m_QuadVB);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*(MaxParticleVertexCount+4), nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * (MaxParticleVertexCount + 4), nullptr, GL_DYNAMIC_DRAW);
 
-	uint32_t indices[(MaxParticleIndexCount+6)];
+	uint32_t indices[(MaxParticleIndexCount + 6)];
 	uint32_t offset = 0;
-	for (size_t i = 0; i < (MaxParticleIndexCount+6); i += 6)
+	for (size_t i = 0; i < (MaxParticleIndexCount + 6); i += 6)
 	{
 		indices[i + 0] = 0 + offset;
 		indices[i + 1] = 1 + offset;
@@ -124,8 +129,8 @@ void SandboxLayer::OnAttach()
 	float _y = 14.0f;
 	bool direction = false;
 	m_Particles.reserve(NumsofParticles);
-	float bufSize=BaseSize;
-	int count=0;
+	float bufSize = BaseSize;
+	int count = 0;
 
 	while (true)
 	{
@@ -144,15 +149,15 @@ void SandboxLayer::OnAttach()
 			if (_y < 1.5f)break;
 
 
-			_x += bufSize  *3;
-			if (_x >= 15.0f-BaseSize)
+			_x += bufSize * 3;
+			if (_x >= 15.0f - BaseSize)
 			{
 				_y -= bufSize * 1.2;
 
 				if (direction)
 				{
 					direction = !direction;
-					_x = bufSize*9/10 ;
+					_x = bufSize * 9 / 10;
 				}
 				else
 				{
@@ -164,13 +169,13 @@ void SandboxLayer::OnAttach()
 
 
 		}
-		
-	
+
+
 	}
 
 	std::random_device rd;
 	std::mt19937 mt(rd());
-	std::uniform_real_distribution<float> dist(2.1*bufSize, 3*bufSize);
+	std::uniform_real_distribution<float> dist(2.1 * bufSize, 3 * bufSize);
 
 
 	for (size_t i = 0; i < NumsofParticles; ++i)
@@ -179,9 +184,9 @@ void SandboxLayer::OnAttach()
 
 
 
-		m_Particles.push_back(Particle({ _x+12.0f ,_y+12.0f }, bufSize));
+		m_Particles.push_back(Particle({ _x + 12.0f ,_y + 12.0f }, bufSize));
 		_x += dist(mt);
-		if (_x >=15.0f -bufSize)
+		if (_x >= 15.0f - bufSize)
 		{
 			_y -= bufSize * 1.2;
 
@@ -198,22 +203,22 @@ void SandboxLayer::OnAttach()
 		}
 
 	}
-	
-	
 
 
 
 
-	
-	
+
+
+
+
 
 	//koordynaty
-	glEnableVertexAttribArray( 0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex) , (const void*)offsetof(Vertex, Position));
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Position));
 
 	//kolor
-	glEnableVertexAttribArray( 1);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex,Color));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, Color));
 
 
 	//mapowanie textury
@@ -226,15 +231,15 @@ void SandboxLayer::OnAttach()
 	glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const void*)offsetof(Vertex, TexID));
 	//glDisableVertexAttribArray(2);
 	//glDisableVertexAttribArray(3);
-;
-	
+	;
+
 
 
 	// Init here
 
-	m_txt1 = LoadTexture("assets/textures/wb.png");
-	m_txt2 = LoadTexture("assets/textures/wb.png");
-	m_txt3 = LoadTexture("assets/textures/wb.png");
+	m_txt1 = LoadTexture("assets/textures/txt4.png");
+	m_txt2 = LoadTexture("assets/textures/txt4.png");
+	m_txt3 = LoadTexture("assets/textures/txt4.png");
 	m_CameraController.SetZoomLevel(0.0f);
 
 
@@ -246,7 +251,7 @@ void SandboxLayer::OnAttach()
 
 
 
-	
+
 }
 
 
@@ -265,7 +270,7 @@ void SandboxLayer::OnEvent(Event& event)
 {
 	m_CameraController.OnEvent(event);
 
-	
+
 	// Events here
 }
 
@@ -273,7 +278,7 @@ void SandboxLayer::OnEvent(Event& event)
 static oVertex* CreateLine(oVertex* target)
 {
 
-	
+
 	//target->Position = { botL.x,botL.y,0.0f };//15 15
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
 	target->TexCoords = { 0.0f,0.0f };
@@ -281,7 +286,7 @@ static oVertex* CreateLine(oVertex* target)
 	float startx = target->Position.x;
 	float starty = target->Position.y;
 	++target;
-	
+
 
 	//target->Position = { botR.x,botR.y,0.0f };//15 15
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
@@ -315,8 +320,8 @@ static oVertex* CreateLine(oVertex* target)
 void SandboxLayer::OnUpdate(Timestep ts)
 {
 	m_CameraController.OnUpdate(ts);
-	
-	
+
+
 
 
 
@@ -325,34 +330,40 @@ void SandboxLayer::OnUpdate(Timestep ts)
 
 	glBindVertexArray(m_QuadVA);
 
-	 std::vector<Vertex>Vertices;
-	Vertices.reserve(MaxParticleVertexCount+4);
+	std::vector<Vertex>Vertices;
+	Vertices.reserve(MaxParticleVertexCount + 4);
 	std::pair<double, double>CurrentMousePosition = GLCore::Input::GetMousePosition();
-	m_Particles.push_back(Particle ({ (CurrentMousePosition.first-550.0f	)/20.0f ,(-(CurrentMousePosition.second-550.0f)		)/20.0f }, 1.0f));
+	glm::vec2 MouseVec = { (CurrentMousePosition.first - 550.0f) / 20.0f,-(CurrentMousePosition.second - 550.0f) / 20.0f };
+	float angle = m_CameraController.GetRotation();
+	float bufAngle = angle * M_PI / 180.0f;
+	float Vx = MouseVec.x * cos(bufAngle) - MouseVec.y * sin(bufAngle);
+	float Vy = MouseVec.x * sin(bufAngle) + MouseVec.y * cos(bufAngle);
+	std::cout << "X:" << Vx << " Y:" << Vy << std::endl;
+	m_Particles.push_back(Particle({ Vx ,Vy }, 1.0f));
 	//CreateQuad(&MouseParticle, (CurrentMousePosition.first -645.0f)/100.0f, (CurrentMousePosition.second - 470.0f)/100.0f, 2.0f, 1.0f);
-	
+
 	//for (size_t i = 0; i < NumsofParticles+1; ++i)
 	//{
 
 	//	std::copy(m_Particles[i].GetBegVertex(), m_Particles[i].GetBegVertex()+4 , std::back_inserter(Vertices));
 
 	//}
-	for (size_t i = 0; i < NumsofParticles+1 ; ++i)
+	for (size_t i = 0; i < NumsofParticles + 1; ++i)
 	{
 
-			std::copy(m_Particles[i].GetBegVertex(), m_Particles[i].GetBegVertex()+4 , std::back_inserter(Vertices));
+		std::copy(m_Particles[i].GetBegVertex(), m_Particles[i].GetBegVertex() + 4, std::back_inserter(Vertices));
 
 	}
 	//Set dynamic vertex buffer
 	glBindBuffer(GL_ARRAY_BUFFER, m_QuadVB);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, (MaxParticleVertexCount+4)*sizeof(Vertex), Vertices.data());
+	glBufferSubData(GL_ARRAY_BUFFER, 0, (MaxParticleVertexCount + 4) * sizeof(Vertex), Vertices.data());
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glUseProgram(m_Shader->GetRendererID());
-	glBindTextureUnit(0,m_txt1);
-	glBindTextureUnit(1,m_txt2);
-	glBindTextureUnit(2,m_txt3);
+	glBindTextureUnit(0, m_txt1);
+	glBindTextureUnit(1, m_txt2);
+	glBindTextureUnit(2, m_txt3);
 
 	auto vp = m_CameraController.GetCamera().GetViewProjectionMatrix();
 	SetUniformMat4(m_Shader->GetRendererID(), "u_ViewProjection", vp);
@@ -361,15 +372,15 @@ void SandboxLayer::OnUpdate(Timestep ts)
 
 
 	glBindVertexArray(m_QuadVA);
-	
+
 	SweepAndPrune(m_Particles);
 	for (auto& i : m_Particles)
 	{
-		
-		i.Update(0.002f,m_Obstacle);
+
+		i.Update(0.002f, m_Obstacle, m_CameraController.GetRotation());
 
 	}
-	glDrawElements(GL_TRIANGLES, (MaxParticleIndexCount+6), GL_UNSIGNED_INT, nullptr);
+	glDrawElements(GL_TRIANGLES, (MaxParticleIndexCount + 6), GL_UNSIGNED_INT, nullptr);
 	m_Particles.pop_back();
 
 
@@ -401,25 +412,30 @@ void SandboxLayer::OnUpdate(Timestep ts)
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ÓBSTACLES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	for (size_t i = 0; i < m_Obstacle.size(); ++i)
 	{
-	std::vector<oVertex>my_vertices;
-	my_vertices.resize(5);
-	my_vertices[0] = m_Obstacle[i].GetBegVertex()[0] ;
-	my_vertices[1] = m_Obstacle[i].GetBegVertex()[1] ;
-	my_vertices[2] = m_Obstacle[i].GetBegVertex()[2] ;
-	my_vertices[3] = m_Obstacle[i].GetBegVertex()[3] ;
-	my_vertices[4] = m_Obstacle[i].GetBegVertex()[0];
-//	oVertex* my_buffer = my_vertces.data();
-	//my_buffer = CreateLine(my_buffer);
-	glBufferSubData(GL_ARRAY_BUFFER,0, my_vertices.size() * sizeof(oVertex), my_vertices.data());
-	//float my_indices[] =
-	//{
-	//0.0f
-	//};
-	//glCreateBuffers(1, &m_LineIB);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_LineIB);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float)*4, my_indices, GL_STATIC_DRAW);
-	
-	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		std::vector<oVertex>my_vertices;
+		my_vertices.resize(5);
+
+		if (m_Obstacle[i].m_Drag) {
+			m_Obstacle[i].SetPosition(std::make_pair((CurrentMousePosition.first - 550.0f) / 20.0f, -(CurrentMousePosition.second - 550.0f) / 20.0f));
+		}
+
+		my_vertices[0] = m_Obstacle[i].GetBegVertex()[0];
+		my_vertices[1] = m_Obstacle[i].GetBegVertex()[1];
+		my_vertices[2] = m_Obstacle[i].GetBegVertex()[2];
+		my_vertices[3] = m_Obstacle[i].GetBegVertex()[3];
+		my_vertices[4] = m_Obstacle[i].GetBegVertex()[0];
+		//	oVertex* my_buffer = my_vertces.data();
+			//my_buffer = CreateLine(my_buffer);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, my_vertices.size() * sizeof(oVertex), my_vertices.data());
+		//float my_indices[] =
+		//{
+		//0.0f
+		//};
+		//glCreateBuffers(1, &m_LineIB);
+		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_LineIB);
+		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float)*4, my_indices, GL_STATIC_DRAW);
+
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 	}
 
 
@@ -438,7 +454,36 @@ void SandboxLayer::OnImGuiRender()
 
 		ElevatorToggler = !ElevatorToggler;
 	}
+	if (ImGui::Button("Reset")) {
+		LottoToggler = false;
+		ElevatorToggler = false;
+
+		m_CameraController.SetRotation(0.0f);
+
+		for (auto& i : m_Particles)
+		{
+			i.Reset();
+		}
+
+	}
+
+	if (ImGui::Button("Dodaj sciane")) {
+		addObstacle = !addObstacle;
+	}
+
+	if (addObstacle) {
+		ImGui::SliderFloat2("Size: ", &newObstaclePos.x, 0.0f, 15.0f);
+
+		if (ImGui::Button("Stworz")) {
+			addObstacle = !addObstacle;
+			m_Obstacle.push_back(Obstacle({ 0.0f,0.0f }, { newObstaclePos.x,0.0f }, { newObstaclePos.x,newObstaclePos.y }, { 0.0f,newObstaclePos.y }, { 0.0f,1.0f,1.0f,1.0f }, true));
+
+			newObstaclePos = { 0.0f, 0.0f };
+		}
+	}
+
 	ImGui::End();
+
 	/*ImGui::Begin("Controls");
 	ImGui::DragFloat2("Quad Position", m_QuadPosition, 0.1f);
 	ImGui::End();*/

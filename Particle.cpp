@@ -1,6 +1,7 @@
 #include "Particle.h"
 #include "SandboxLayer.h"
 float FloorLevel = 0.0f;
+
 //const float Particle::getCurrentVelocity()
 //{
 //	return sqrt(abs((2.0f*m_k*(m_PreviousHeight - m_CurrentHeight)) + static_cast<float>(pow(m_PreviousVelocity,2))));
@@ -8,14 +9,15 @@ float FloorLevel = 0.0f;
 
 Particle::Particle(glm::vec2 StartPos, float I_size)
 	:m_StartPos(StartPos), m_Size(I_size), m_DirY(false)
-	, m_k(1.0f), m_AnimationSpeed(0.1f), m_CurrentVelocity({ 0.0f,0.0f }),m_Gravity{0.0f,1000.0f}
-	
+	, m_k(1.0f), m_AnimationSpeed(0.1f), m_CurrentVelocity({ 0.0f,0.0f }), m_Gravity{ 0.0f,1000.0f },
+	m_angle(0.0f)
+
 {
 	m_CurrentPosition.x = m_StartPos.x;
 	m_CurrentPosition.y = m_StartPos.y;
 	m_PreviousPosition = m_CurrentPosition;
 	m_Acceleration = { 0.0f,0.0f };
-	CreateQuad(this, m_StartPos.x, m_StartPos.y, 1.0f,m_Size);
+	CreateQuad(this, m_StartPos.x, m_StartPos.y, 1.0f, m_Size);
 }
 
 Particle::~Particle()
@@ -28,10 +30,10 @@ float clamp(float val, float min, float max) {
 	else return val;
 }
 
-void Particle::Update(float dt,std::vector<Obstacle>&Obstacles)
+void Particle::Update(float dt, std::vector<Obstacle>& Obstacles, float angle)
 {
-	
-	const int sub_steps = 8;
+
+	const int sub_steps = 12;
 	const float sub_dt = dt / static_cast<float>(sub_steps);
 	if (LottoToggler)
 	{
@@ -108,7 +110,28 @@ void Particle::Update(float dt,std::vector<Obstacle>&Obstacles)
 
 			if (m_CurrentPosition.y < FloorLevel && m_CurrentPosition.x < 18.0f)m_CurrentPosition.y = FloorLevel;
 
-			m_Acceleration += m_Gravity;
+
+			float bufAngle = angle * M_PI / 180.0f;
+			float Vx = m_Gravity.x * cos(bufAngle) - m_Gravity.y * sin(bufAngle);
+			float Vy = m_Gravity.x * sin(bufAngle) + m_Gravity.y * cos(bufAngle);
+			m_angle = angle;
+			//float Vy2 = Checked->m_CurrentVelocity.x *  sin(Dir) + Checked->m_CurrentVelocity.y *cos(Dir);
+			//float Vx2 = Checked->m_CurrentVelocity.x *  cos(Dir) - Checked->m_CurrentVelocity.y *sin(Dir);
+			//float buf = Vx;
+			//Vx = Vx2;
+			//Vx2 = buf;
+
+
+			//Current->m_CurrentVelocity.x = Vx * cos(-Dir) - Vy * sin(-Dir);
+			//Current->m_CurrentVelocity.y = Vx * sin(-Dir) + Vy * cos(-Dir);
+			//Checked->m_CurrentVelocity.x = Vx2 * cos(-Dir) - Vy2 * sin(-Dir);
+			//Checked->m_CurrentVelocity.y = Vx2 * sin(-Dir) + Vy2 * cos(-Dir);
+
+
+
+			glm::vec2 NewGravity = { Vx,Vy };
+			//std::cout << "x: " << m_Gravity.x << " y: " << m_Gravity.y << std::endl;
+			m_Acceleration += NewGravity;
 			m_CurrentVelocity = m_CurrentPosition - m_PreviousPosition;
 			m_PreviousPosition = m_CurrentPosition;
 			m_CurrentPosition = m_CurrentPosition + m_CurrentVelocity - m_Acceleration * sub_dt * sub_dt;
@@ -153,6 +176,17 @@ void Particle::Update(float dt,std::vector<Obstacle>&Obstacles)
 	}
 }
 
+void Particle::Reset()
+{
+	m_CurrentPosition.x = m_StartPos.x;
+	m_CurrentPosition.y = m_StartPos.y;
+	m_PreviousPosition = m_CurrentPosition;
+	m_Acceleration = { 0.0f,0.0f };
+	CreateQuad(this, m_StartPos.x, m_StartPos.y, 1.0f, m_Size);
+
+
+}
+
 
 
 
@@ -163,7 +197,7 @@ void Particle::Update(float dt,std::vector<Obstacle>&Obstacles)
 
 void SweepAndPrune(std::vector<Particle>& Particles)
 {
-	
+
 	//for (size_t i = 0; i < Particles.size()-1; ++i)
 	//{
 	//	for (size_t j = i+1; j < Particles.size(); j++)
@@ -185,19 +219,19 @@ void SweepAndPrune(std::vector<Particle>& Particles)
 
 	//}
 
-	
+
 	std::vector<std::vector <std::vector<Particle*>>> result;
 
 
 
 	result.resize(30);
-	for (int i = 0; i <30; ++i)result[i].resize(30);
-	for (auto &i : Particles)
+	for (int i = 0; i < 30; ++i)result[i].resize(30);
+	for (auto& i : Particles)
 	{
 
 		int bufRow = i.m_CurrentPosition.x;
 		int bufCol = i.m_CurrentPosition.y;
-		if (bufRow >=29)bufRow = 29;
+		if (bufRow >= 29)bufRow = 29;
 		else if (bufRow < 0)bufRow = 0;
 		if (bufCol >= 29)bufCol = 29;
 		else if (bufCol < 0)bufCol = 0;
@@ -205,23 +239,23 @@ void SweepAndPrune(std::vector<Particle>& Particles)
 	}
 
 	for (int i = 0; i <= 29; ++i)
-	{		
+	{
 		for (int j = 0; j <= 29; ++j)
 		{
-			for (int dx = -1; dx <=1 ; ++dx)
+			for (int dx = -1; dx <= 1; ++dx)
 			{
 				for (int dy = -1; dy <= 1; ++dy)
 				{
-				
-					
-					for (auto &Current : result[i][j])
+
+
+					for (auto& Current : result[i][j])
 					{
 
 
 						int where_at_x = i + dx;
 						int where_at_y = j + dy;
-						
-						if (where_at_x > 29 || where_at_y > 29||where_at_x<0||where_at_y<0)continue;
+
+						if (where_at_x > 29 || where_at_y > 29 || where_at_x < 0 || where_at_y < 0)continue;
 						for (auto& Checked : result[where_at_x][where_at_y])
 						{
 							//if (dx == 0 && dy == 0)continue;
@@ -233,41 +267,41 @@ void SweepAndPrune(std::vector<Particle>& Particles)
 							float buf = Vx;
 							Vx = Vx2;
 							Vx2 = buf;
-			
+
 
 							Current->m_CurrentVelocity.x = Vx * cos(-Dir) - Vy * sin(-Dir);
 							Current->m_CurrentVelocity.y = Vx * sin(-Dir) + Vy * cos(-Dir);
 							Checked->m_CurrentVelocity.x = Vx2 * cos(-Dir) - Vy2 * sin(-Dir);
 							Checked->m_CurrentVelocity.y = Vx2 * sin(-Dir) + Vy2 * cos(-Dir);
 							*/
-									
 
-	
-									//float bufSize = Particles[i].m_Size;
-									//if (Particles[j].m_Size>bufSize)bufSize=Particles[j].m_Size;
-								
-				
 
-								
 
-		
-								
-								float bufSize = Current->m_Size/2 + Checked->m_Size/2;
-								const glm::vec2 Collision_axis =   Current->m_CurrentPosition- Checked->m_CurrentPosition;
-								const float dist = glm::length(Collision_axis);
-								if (dist < bufSize&&dist>0.0f)
-								{
-									const glm::vec2 n = Collision_axis / dist;
-									const float delta = bufSize - dist;
-									Current->m_CurrentPosition +=	0.005f * delta * n;
-									Checked->m_CurrentPosition -=	0.005f * delta * n;
-									
-								}
-			
+							//float bufSize = Particles[i].m_Size;
+							//if (Particles[j].m_Size>bufSize)bufSize=Particles[j].m_Size;
+
+
+
+
+
+
+
+							float bufSize = Current->m_Size / 2 + Checked->m_Size / 2;
+							const glm::vec2 Collision_axis = Current->m_CurrentPosition - Checked->m_CurrentPosition;
+							const float dist = glm::length(Collision_axis);
+							if (dist < bufSize && dist>0.0f)
+							{
+								const glm::vec2 n = Collision_axis / dist;
+								const float delta = bufSize - dist;
+								Current->m_CurrentPosition += 0.005f * delta * n;
+								Checked->m_CurrentPosition -= 0.005f * delta * n;
+
+							}
+
 
 
 						}
-					
+
 
 					}
 
@@ -279,13 +313,11 @@ void SweepAndPrune(std::vector<Particle>& Particles)
 
 }
 
- double Direction(Particle& p1, Particle& p2)
+double Direction(glm::vec2 p1, glm::vec2 p2)
 {
-		
-		glm::vec2 Middle_1 = { p1.m_Vertex[0].Position.x + p1.m_Size / 2,p1.m_Vertex[0].Position.y + p1.m_Size / 2 };
-		glm::vec2 Middle_2 = { p2.m_Vertex[0].Position.x + p2.m_Size / 2,p2.m_Vertex[0].Position.y + p2.m_Size / 2 };
-		double angle = atan2f(Middle_2.y - Middle_1.y, Middle_2.x - Middle_1.x);
-		return angle;
+
+	double angle = atan2f(p2.y - p1.y, p2.x - p1.x);
+	return angle;
 
 }
 
@@ -324,11 +356,3 @@ void CreateQuad(Particle* target, float x, float y, float textureID, float size)
 
 	}
 }
-
-
-
-
-
-
-
-

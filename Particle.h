@@ -4,8 +4,10 @@
 #include <vector>
 #include <cmath>
 #include "Obstacle.h"
+# define M_PI           3.14159265358979323846
 extern bool LottoToggler;
 extern bool ElevatorToggler;
+extern bool ResetToggler;
 
 struct Vec2
 {
@@ -37,34 +39,36 @@ public:
 	glm::vec2 m_PreviousPosition;
 	glm::vec2 m_CurrentPosition;
 	float m_PreviousVelocity;
-	
+	float m_angle;
+
 
 public:
-	
-	
+
+
 	const float getCurrentVelocity();
 	const void getE() {
 		std::cout << "x: " << m_CurrentPosition.x << " y:" << m_CurrentPosition.y << std::endl <<
 			"velo x:" << m_CurrentVelocity.x << "velo y:" << m_CurrentVelocity.y << std::endl;
 	}
-	
-	Particle(glm::vec2 StartPos,float I_size);
+
+	Particle(glm::vec2 StartPos, float I_size);
 	~Particle();
-	void Update(float dt, std::vector <Obstacle>& Obstacles );
+	void Update(float dt, std::vector <Obstacle>& Obstacles, float angle);
+	void Reset();
 	const Vertex* GetBegVertex() { return m_Vertex; }
 	const glm::vec2 GetCastedShadowX() { return glm::vec2(m_CurrentPosition.x, m_CurrentPosition.x + m_Size); }
-	const glm::vec2 GetCastedShadowY() { return glm::vec2(m_CurrentPosition.y, m_CurrentPosition.y+ m_Size); }
+	const glm::vec2 GetCastedShadowY() { return glm::vec2(m_CurrentPosition.y, m_CurrentPosition.y + m_Size); }
 	bool operator < (const Particle& Part) const
 	{
 		return (m_CurrentPosition.x < Part.m_CurrentPosition.x);
 	}
-	
+
 
 private:
-	friend  void CreateQuad(Particle* target, float x, float y, float textureID,float size);
+	friend  void CreateQuad(Particle* target, float x, float y, float textureID, float size);
 	friend void SweepAndPrune(std::vector<Particle>& Particles);
-	friend  double  Direction(Particle& p1, Particle& p2) ;
+	friend  double  Direction(Particle& p1, Particle& p2);
 	//friend std::vector<std::pair<int, Particle>>SweepAndPruneColisionHandler(std::vector<std::vector<Particle>>Particles);
-	
+
 
 };

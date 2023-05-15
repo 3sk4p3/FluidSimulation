@@ -4,8 +4,10 @@
 #include <vector>
 #include <cmath>
 #include "Obstacle.h"
+# define M_PI           3.14159265358979323846
 extern bool LottoToggler;
 extern bool ElevatorToggler;
+extern bool ResetToggler;
 
 struct Vec2
 {
@@ -37,6 +39,7 @@ public:
 	glm::vec2 m_PreviousPosition;
 	glm::vec2 m_CurrentPosition;
 	float m_PreviousVelocity;
+	float m_angle;
 	
 
 public:
@@ -50,7 +53,8 @@ public:
 	
 	Particle(glm::vec2 StartPos,float I_size);
 	~Particle();
-	void Update(float dt, std::vector <Obstacle>& Obstacles );
+	void Update(float dt, std::vector <Obstacle>& Obstacles ,float angle);
+	void Reset();
 	const Vertex* GetBegVertex() { return m_Vertex; }
 	const glm::vec2 GetCastedShadowX() { return glm::vec2(m_CurrentPosition.x, m_CurrentPosition.x + m_Size); }
 	const glm::vec2 GetCastedShadowY() { return glm::vec2(m_CurrentPosition.y, m_CurrentPosition.y+ m_Size); }

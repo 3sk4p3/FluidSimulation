@@ -1,6 +1,7 @@
 #include "Particle.h"
 #include "SandboxLayer.h"
 float FloorLevel = 0.0f;
+
 //const float Particle::getCurrentVelocity()
 //{
 //	return sqrt(abs((2.0f*m_k*(m_PreviousHeight - m_CurrentHeight)) + static_cast<float>(pow(m_PreviousVelocity,2))));
@@ -8,7 +9,8 @@ float FloorLevel = 0.0f;
 
 Particle::Particle(glm::vec2 StartPos, float I_size)
 	:m_StartPos(StartPos), m_Size(I_size), m_DirY(false)
-	, m_k(1.0f), m_AnimationSpeed(0.1f), m_CurrentVelocity({ 0.0f,0.0f }),m_Gravity{0.0f,1000.0f}
+	, m_k(1.0f), m_AnimationSpeed(0.1f), m_CurrentVelocity({ 0.0f,0.0f }),m_Gravity{0.0f,1000.0f},
+	m_angle(0.0f)
 	
 {
 	m_CurrentPosition.x = m_StartPos.x;
@@ -28,124 +30,160 @@ float clamp(float val, float min, float max) {
 	else return val;
 }
 
-void Particle::Update(float dt,std::vector<Obstacle>&Obstacles)
+void Particle::Update(float dt,std::vector<Obstacle>&Obstacles,float angle)
 {
 	
-	const int sub_steps = 8;
+	const int sub_steps = 12;
 	const float sub_dt = dt / static_cast<float>(sub_steps);
-	for (size_t i = 0; i < sub_steps; i++)
+	if (LottoToggler)
 	{
-		//circular shape equations
-	/*	const glm::vec2 position{ 7.5f,7.5f };
-		const float radius = 10.0f;
-		glm::vec2 to_obj = m_CurrentPosition - position;
-		const float dist = glm::length(to_obj);
-		if (dist > radius - m_Size / 2)
-		{
-			const glm::vec2 n = to_obj / dist;
-			m_CurrentPosition = position + n * (radius - m_Size / 2);
-		}*/
-		//rectangular shape equations
 
-		//winda jedzie w gore
-		for (size_t Obs=0;Obs<Obstacles.size();++Obs)
-		{
-			//0 i 1 
 
-			// get center point circle first 
-			glm::vec2 center(m_CurrentPosition.x+m_Size/2, m_CurrentPosition.y + m_Size / 2);
-			// calculate AABB info (center, half-extents)
-			glm::vec2 aabb_half_extents(Obstacles[ Obs].GetWidth() / 2, Obstacles[Obs].GetHeight() / 2);
-			glm::vec2 aabb_center(
-				Obstacles[Obs].GetVertices()[0].Position.x + aabb_half_extents.x,
-				Obstacles[Obs].GetVertices()[0].Position.y + aabb_half_extents.y
-			);
-			// get difference vector between both centers
-			glm::vec2 difference = center - aabb_center;
-			glm::vec2 clamped = clamp(difference, -aabb_half_extents, aabb_half_extents);
-			// add clamped value to AABB_center and we get the value of box closest to circle
-			glm::vec2 closest = aabb_center + clamped;
-			// retrieve vector between center circle and closest point AABB and check if length <= radius
-			difference = closest - center;
-			float len = glm::length(difference);
-			if (glm::length(difference) < m_Size / 2)
+		for (size_t i = 0; i < sub_steps; i++)
+		{
+			//circular shape equations
+		/*	const glm::vec2 position{ 7.5f,7.5f };
+			const float radius = 10.0f;
+			glm::vec2 to_obj = m_CurrentPosition - position;
+			const float dist = glm::length(to_obj);
+			if (dist > radius - m_Size / 2)
+			{
+				const glm::vec2 n = to_obj / dist;
+				m_CurrentPosition = position + n * (radius - m_Size / 2);
+			}*/
+			//rectangular shape equations
+
+			//winda jedzie w gore
+			for (size_t Obs = 0; Obs < Obstacles.size(); ++Obs)
+			{
+				//0 i 1 
+
+				// get center point circle first 
+				glm::vec2 center(m_CurrentPosition.x + m_Size / 2, m_CurrentPosition.y + m_Size / 2);
+				// calculate AABB info (center, half-extents)
+				glm::vec2 aabb_half_extents(Obstacles[Obs].GetWidth() / 2, Obstacles[Obs].GetHeight() / 2);
+				glm::vec2 aabb_center(
+					Obstacles[Obs].GetVertices()[0].Position.x + aabb_half_extents.x,
+					Obstacles[Obs].GetVertices()[0].Position.y + aabb_half_extents.y
+				);
+				// get difference vector between both centers
+				glm::vec2 difference = center - aabb_center;
+				glm::vec2 clamped = clamp(difference, -aabb_half_extents, aabb_half_extents);
+				// add clamped value to AABB_center and we get the value of box closest to circle
+				glm::vec2 closest = aabb_center + clamped;
+				// retrieve vector between center circle and closest point AABB and check if length <= radius
+				difference = closest - center;
+				float len = glm::length(difference);
+				if (glm::length(difference) < m_Size / 2)
+				{
+
+
+					m_CurrentPosition = m_CurrentPosition - (difference / glm::length(difference)) * 0.009f;
+
+					//if (center.x != closest.x)m_CurrentPosition.x = closest.x;
+					//else if (center.y != closest.y)m_CurrentPosition.y = closest.y;
+
+
+				}
+
+
+			}
+			if (ElevatorToggler)
 			{
 
-				
-				m_CurrentPosition = m_CurrentPosition - (difference / glm::length(difference))*0.005f;
-				
-				//if (center.x != closest.x)m_CurrentPosition.x = closest.x;
-				//else if (center.y != closest.y)m_CurrentPosition.y = closest.y;
-
+				if (FloorLevel > 18.0f) {
+					FloorLevel = 0.0f;
+					ElevatorToggler = false;
+				}
+				FloorLevel += 0.000002f;
 
 			}
 
+			//jak jest rura zamknieta
 
+		/*	if (m_CurrentPosition.y>15.0f&&m_CurrentPosition.x>15.0f )
+
+			{
+				glm::vec2 left = { 50.0f, 0.0f };
+					m_Acceleration += left;
+			}*/
+
+			if (m_CurrentPosition.y < FloorLevel && m_CurrentPosition.x < 18.0f)m_CurrentPosition.y = FloorLevel;
+
+
+			float bufAngle =  angle*M_PI/180.0f;
+			float Vx  = m_Gravity.x *  cos(bufAngle) - m_Gravity.y *sin(bufAngle);
+			float Vy  = m_Gravity.x *  sin(bufAngle) + m_Gravity.y *cos(bufAngle);
+			m_angle = angle;
+			//float Vy2 = Checked->m_CurrentVelocity.x *  sin(Dir) + Checked->m_CurrentVelocity.y *cos(Dir);
+			//float Vx2 = Checked->m_CurrentVelocity.x *  cos(Dir) - Checked->m_CurrentVelocity.y *sin(Dir);
+			//float buf = Vx;
+			//Vx = Vx2;
+			//Vx2 = buf;
+
+
+			//Current->m_CurrentVelocity.x = Vx * cos(-Dir) - Vy * sin(-Dir);
+			//Current->m_CurrentVelocity.y = Vx * sin(-Dir) + Vy * cos(-Dir);
+			//Checked->m_CurrentVelocity.x = Vx2 * cos(-Dir) - Vy2 * sin(-Dir);
+			//Checked->m_CurrentVelocity.y = Vx2 * sin(-Dir) + Vy2 * cos(-Dir);
+
+
+
+			glm::vec2 NewGravity = { Vx,Vy };
+			//std::cout << "x: " << m_Gravity.x << " y: " << m_Gravity.y << std::endl;
+			m_Acceleration += NewGravity;
+			m_CurrentVelocity = m_CurrentPosition - m_PreviousPosition;
+			m_PreviousPosition = m_CurrentPosition;
+			m_CurrentPosition = m_CurrentPosition + m_CurrentVelocity - m_Acceleration * sub_dt * sub_dt;
+			//odbitka od rury
+			//jak rura zamkmnieta, to ma sie odjbjac od niej.
+			//if (!LottoToggler&&m_CurrentPosition.x < 15.0f)m_CurrentPosition.x = 15.0f;
+
+
+			//
+			//else
+			//{
+
+
+			//		if (m_CurrentPosition.x < 15.0f)
+			//		{
+
+			//		//if ((m_CurrentPosition.x >= 15.0f - m_Size)&&(m_CurrentPosition.y<=15.0f))m_CurrentPosition.x = 15.0f - m_Size;
+			//		}
+			//	
+			//		if (m_CurrentPosition.y < FloorLevel)m_CurrentPosition.y = FloorLevel;
+			//}
+			//if (m_CurrentPosition.x > 30.0f-m_Size )m_CurrentPosition.x = 30.0f-m_Size ;
+
+
+			//if (m_CurrentPosition.x > 15.0f-m_Size)
+			//{
+
+			//	if (m_CurrentPosition.y < 15.0f - m_Size * 0.25f) m_CurrentPosition.x = 15.0f - m_Size;
+			//	else
+			//	{
+			//		if (m_CurrentPosition.y < (m_CurrentPosition.x - m_Size) / 2.0f + 7.5f + m_Size * 0.75f)
+			//			m_CurrentPosition.y = (m_CurrentPosition.x - m_Size) / 2.0f + 7.5f + m_Size * 0.75f;
+			//		else if (m_CurrentPosition.y > (m_CurrentPosition.x - m_Size) / 2.0f + 9.8f)
+			//			m_CurrentPosition.y = (m_CurrentPosition.x - m_Size) / 2.0f + 9.8f;
+			//	}
+			//}
+			m_Acceleration = {};
 		}
-		if (ElevatorToggler)
-		{
-
-			if (FloorLevel > 18.0f) {
-				FloorLevel = 0.0f;
-				ElevatorToggler = false;
-			}
-			FloorLevel += 0.00001f;
-
-		}
-
-		//jak jest rura zamknieta
-
-	/*	if (m_CurrentPosition.y>15.0f&&m_CurrentPosition.x>15.0f )
-
-		{
-			glm::vec2 left = { 50.0f, 0.0f };
-				m_Acceleration += left;
-		}*/
-
-		if (m_CurrentPosition.y < FloorLevel)m_CurrentPosition.y = FloorLevel;
-		
-		m_Acceleration += m_Gravity;
-		m_CurrentVelocity = m_CurrentPosition - m_PreviousPosition;
-		m_PreviousPosition = m_CurrentPosition;
-		m_CurrentPosition = m_CurrentPosition + m_CurrentVelocity - m_Acceleration * sub_dt * sub_dt;
-		//odbitka od rury
-		//jak rura zamkmnieta, to ma sie odjbjac od niej.
-		//if (!LottoToggler&&m_CurrentPosition.x < 15.0f)m_CurrentPosition.x = 15.0f;
 
 
-		//
-		//else
-		//{
-
-
-		//		if (m_CurrentPosition.x < 15.0f)
-		//		{
-
-		//		//if ((m_CurrentPosition.x >= 15.0f - m_Size)&&(m_CurrentPosition.y<=15.0f))m_CurrentPosition.x = 15.0f - m_Size;
-		//		}
-		//	
-		//		if (m_CurrentPosition.y < FloorLevel)m_CurrentPosition.y = FloorLevel;
-		//}
-		//if (m_CurrentPosition.x > 30.0f-m_Size )m_CurrentPosition.x = 30.0f-m_Size ;
-
-
-		//if (m_CurrentPosition.x > 15.0f-m_Size)
-		//{
-
-		//	if (m_CurrentPosition.y < 15.0f - m_Size * 0.25f) m_CurrentPosition.x = 15.0f - m_Size;
-		//	else
-		//	{
-		//		if (m_CurrentPosition.y < (m_CurrentPosition.x - m_Size) / 2.0f + 7.5f + m_Size * 0.75f)
-		//			m_CurrentPosition.y = (m_CurrentPosition.x - m_Size) / 2.0f + 7.5f + m_Size * 0.75f;
-		//		else if (m_CurrentPosition.y > (m_CurrentPosition.x - m_Size) / 2.0f + 9.8f)
-		//			m_CurrentPosition.y = (m_CurrentPosition.x - m_Size) / 2.0f + 9.8f;
-		//	}
-		//}
-		m_Acceleration = {};
+		CreateQuad(this, m_CurrentPosition.x, m_CurrentPosition.y, 1.0f, m_Size);
 	}
+}
 
-
-	CreateQuad(this, m_CurrentPosition.x, m_CurrentPosition.y, 1.0f, m_Size);
+void Particle::Reset()
+{
+		m_CurrentPosition.x = m_StartPos.x;
+		m_CurrentPosition.y = m_StartPos.y;
+		m_PreviousPosition = m_CurrentPosition;
+		m_Acceleration = { 0.0f,0.0f };
+		CreateQuad(this, m_StartPos.x, m_StartPos.y, 1.0f, m_Size);
+	
 
 }
 
@@ -275,12 +313,10 @@ void SweepAndPrune(std::vector<Particle>& Particles)
 
 }
 
- double Direction(Particle& p1, Particle& p2)
+ double Direction(glm::vec2 p1, glm::vec2 p2)
 {
-		
-		glm::vec2 Middle_1 = { p1.m_Vertex[0].Position.x + p1.m_Size / 2,p1.m_Vertex[0].Position.y + p1.m_Size / 2 };
-		glm::vec2 Middle_2 = { p2.m_Vertex[0].Position.x + p2.m_Size / 2,p2.m_Vertex[0].Position.y + p2.m_Size / 2 };
-		double angle = atan2f(Middle_2.y - Middle_1.y, Middle_2.x - Middle_1.x);
+	
+		double angle = atan2f(p2.y - p1.y, p2.x - p1.x);
 		return angle;
 
 }

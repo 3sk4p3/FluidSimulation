@@ -10,6 +10,7 @@ const size_t MaxParticleIndexCount = NumsofParticles* 6;
 const float BaseSize = 1.5f;
 bool	LottoToggler = false;
 bool	ElevatorToggler = false;
+bool	ResetToggler = false;
 
 
 
@@ -63,12 +64,14 @@ void SandboxLayer::OnAttach()
 	
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	
-	m_Obstacle.push_back(Obstacle({ 0.0f,0.0f }, { 50.0f,0.0f }, { 50.0f,1.0f }, { 0.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f }));
-	m_Obstacle.push_back(Obstacle({ 0.0f,0.0f }, { 1.0f,0.0f }, { 1.0f,35.0f }, { 0.0f,35.0f }, { 0.0f,1.0f,1.0f,1.0f }));
-	m_Obstacle.push_back(Obstacle({ 24.0f,0.0f }, { 25.0f,0.0f }, { 25.0f,35.0f }, { 24.0f,35.0f }, { 0.0f,1.0f,1.0f,1.0f }));
+	m_Obstacle.push_back(Obstacle({ 10.0f,0.0f }, { 50.0f,0.0f }, { 50.0f,1.0f }, { 10.0f,1.0f }, { 1.0f,1.0f,1.0f,1.0f }));
+	m_Obstacle.push_back(Obstacle({ 49.0f,0.0f }, { 50.0f,0.0f }, { 50.0f,35.0f }, { 49.0f,35.0f }, { 1.0f,1.0f,1.0f,1.0f }));
+	m_Obstacle.push_back(Obstacle({ 10.0f,0.0f }, { 11.0f,0.0f }, { 11.0f,35.0f }, { 10.0f,35.0f }, { 0.0f,1.0f,1.0f,1.0f }));
+	m_Obstacle.push_back(Obstacle({ 18.0f,0.0f }, { 19.0f,0.0f }, { 19.0f,16.0f }, { 18.0f,16.0f }, { 0.0f,1.0f,1.0f,1.0f }));
+	m_Obstacle.push_back(Obstacle({ 10.0f,34.0f }, { 50.0f,34.0f }, { 50.0f,35.0f }, { 10.0f,35.0f }, { 0.0f,1.0f,1.0f,1.0f }));
 	
 	
-	m_Obstacle.push_back(Obstacle({ 15.0f,15.0f }, { 30.0f,15.0f }, { 30.0f,16.0f }, { 15.0f,16.0f }, { 0.0f,1.0f,1.0f,1.0f }));
+	m_Obstacle.push_back(Obstacle({ 18.0f,15.0f }, { 25.0f,15.0f }, { 25.0f,16.0f }, { 18.0f,16.0f }, { 0.0f,1.0f,1.0f,1.0f }));
 
 	
 
@@ -179,7 +182,7 @@ void SandboxLayer::OnAttach()
 
 
 
-		m_Particles.push_back(Particle({ _x+16.0f ,_y+16.0f }, bufSize));
+		m_Particles.push_back(Particle({ _x+12.0f ,_y+12.0f }, bufSize));
 		_x += dist(mt);
 		if (_x >=15.0f -bufSize)
 		{
@@ -328,7 +331,13 @@ void SandboxLayer::OnUpdate(Timestep ts)
 	 std::vector<Vertex>Vertices;
 	Vertices.reserve(MaxParticleVertexCount+4);
 	std::pair<double, double>CurrentMousePosition = GLCore::Input::GetMousePosition();
-	m_Particles.push_back(Particle ({ (CurrentMousePosition.first-550.0f	)/20.0f ,(-(CurrentMousePosition.second-550.0f)		)/20.0f }, 1.0f));
+	glm::vec2 MouseVec = { (CurrentMousePosition.first-550.0f)/20.0f,-(CurrentMousePosition.second-550.0f)/20.0f };
+	float angle = m_CameraController.GetRotation();
+	float bufAngle = angle * M_PI / 180.0f;
+	float Vx = MouseVec.x * cos(bufAngle) - MouseVec.y * sin(bufAngle);
+	float Vy = MouseVec.x * sin(bufAngle) + MouseVec.y * cos(bufAngle);
+	std::cout << "X:" << Vx << " Y:" << Vy << std::endl;
+	m_Particles.push_back(Particle ({ Vx ,Vy}, 1.0f));
 	//CreateQuad(&MouseParticle, (CurrentMousePosition.first -645.0f)/100.0f, (CurrentMousePosition.second - 470.0f)/100.0f, 2.0f, 1.0f);
 	
 	//for (size_t i = 0; i < NumsofParticles+1; ++i)
@@ -366,7 +375,7 @@ void SandboxLayer::OnUpdate(Timestep ts)
 	for (auto& i : m_Particles)
 	{
 		
-		i.Update(0.002f,m_Obstacle);
+		i.Update(0.002f,m_Obstacle,m_CameraController.GetRotation());
 
 	}
 	glDrawElements(GL_TRIANGLES, (MaxParticleIndexCount+6), GL_UNSIGNED_INT, nullptr);
@@ -438,7 +447,21 @@ void SandboxLayer::OnImGuiRender()
 
 		ElevatorToggler = !ElevatorToggler;
 	}
+	if (ImGui::Button("Reset")) {
+	LottoToggler = false;
+	ElevatorToggler = false;
+
+		m_CameraController.SetRotation(0.0f);
+
+		for (auto &i : m_Particles)
+		{
+			i.Reset();
+		}
+
+	}
+
 	ImGui::End();
+
 	/*ImGui::Begin("Controls");
 	ImGui::DragFloat2("Quad Position", m_QuadPosition, 0.1f);
 	ImGui::End();*/

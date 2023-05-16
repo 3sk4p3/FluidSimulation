@@ -34,8 +34,10 @@ Obstacle::~Obstacle()
 }
 
 void Obstacle::SetPosition(std::pair<double, double> i_Pos) {
-	float w = GetWidth() / 2;
-	float h = GetHeight() / 2;
+
+
+	float w = GetWidth()/2;
+	float h = GetHeight()/2;
 	m_Vertex[0].Position = { i_Pos.first - w,i_Pos.second - h,0.0f };
 	m_Vertex[1].Position = { i_Pos.first + w,i_Pos.second - h,0.0f };
 	m_Vertex[2].Position = { i_Pos.first + w,i_Pos.second + h,0.0f };

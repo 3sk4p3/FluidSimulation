@@ -16,6 +16,8 @@ public:
 	 oVertex* GetBegVertex() { return m_Vertex; }
 	 inline float GetHeight() { return m_Height; }
 	 inline float GetWidth() { return m_Width; }
+	 inline void SetWidth(float w) {m_Width=w ; }
+	 inline void SetHeight(float h) { m_Height=h; }
 	 inline oVertex* GetVertices() { return m_Vertex; }
 	 void SetPosition(std::pair<double, double> i_Pos);
 

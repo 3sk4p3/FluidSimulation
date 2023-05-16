@@ -11,7 +11,7 @@ const float BaseSize = 1.5f;
 bool	LottoToggler = false;
 bool	ElevatorToggler = false;
 bool	ResetToggler = false;
-
+float ClearColor[4];
 glm::vec2 newObstaclePos;
 bool addObstacle = false;
 
@@ -237,9 +237,9 @@ void SandboxLayer::OnAttach()
 
 	// Init here
 
-	m_txt1 = LoadTexture("assets/textures/txt4.png");
-	m_txt2 = LoadTexture("assets/textures/txt4.png");
-	m_txt3 = LoadTexture("assets/textures/txt4.png");
+	m_txt1 = LoadTexture("assets/textures/wb.png");
+	m_txt2 = LoadTexture("assets/textures/wb.png");
+	m_txt3 = LoadTexture("assets/textures/wb.png");
 	m_CameraController.SetZoomLevel(0.0f);
 
 
@@ -333,12 +333,14 @@ void SandboxLayer::OnUpdate(Timestep ts)
 	std::vector<Vertex>Vertices;
 	Vertices.reserve(MaxParticleVertexCount + 4);
 	std::pair<double, double>CurrentMousePosition = GLCore::Input::GetMousePosition();
+	bool LMB = GLCore::Input::IsMouseButtonPressed(0);
+	bool RMB = GLCore::Input::IsMouseButtonPressed(1);
 	glm::vec2 MouseVec = { (CurrentMousePosition.first - 550.0f) / 20.0f,-(CurrentMousePosition.second - 550.0f) / 20.0f };
 	float angle = m_CameraController.GetRotation();
 	float bufAngle = angle * M_PI / 180.0f;
 	float Vx = MouseVec.x * cos(bufAngle) - MouseVec.y * sin(bufAngle);
 	float Vy = MouseVec.x * sin(bufAngle) + MouseVec.y * cos(bufAngle);
-	std::cout << "X:" << Vx << " Y:" << Vy << std::endl;
+	//std::cout << "X:" << Vx << " Y:" << Vy << std::endl;
 	m_Particles.push_back(Particle({ Vx ,Vy }, 1.0f));
 	//CreateQuad(&MouseParticle, (CurrentMousePosition.first -645.0f)/100.0f, (CurrentMousePosition.second - 470.0f)/100.0f, 2.0f, 1.0f);
 
@@ -414,8 +416,16 @@ void SandboxLayer::OnUpdate(Timestep ts)
 	{
 		std::vector<oVertex>my_vertices;
 		my_vertices.resize(5);
-
-		if (m_Obstacle[i].m_Drag) {
+		 if (m_Obstacle[i].m_Drag) {
+			float w = m_Obstacle[i].GetWidth() ;
+			float h = m_Obstacle[i].GetHeight();
+		
+			if (LMB)m_Obstacle[i].m_Drag = false;
+			if (RMB)
+			{
+				m_Obstacle[i].SetHeight(w);
+				m_Obstacle[i].SetWidth(h);
+			}
 			m_Obstacle[i].SetPosition(std::make_pair((CurrentMousePosition.first - 550.0f) / 20.0f, -(CurrentMousePosition.second - 550.0f) / 20.0f));
 		}
 
@@ -443,7 +453,7 @@ void SandboxLayer::OnUpdate(Timestep ts)
 
 void SandboxLayer::OnImGuiRender()
 {
-
+	
 	ImGui::Begin("Options");
 
 	if (ImGui::Button("Zwolnienie blokady")) {
@@ -460,11 +470,12 @@ void SandboxLayer::OnImGuiRender()
 
 		m_CameraController.SetRotation(0.0f);
 
-		for (auto& i : m_Particles)
+		for (auto& i : m_Particles) 
 		{
 			i.Reset();
 		}
-
+			m_Obstacle.erase(m_Obstacle.begin() + 6, m_Obstacle.end());
+			m_Obstacle.shrink_to_fit();
 	}
 
 	if (ImGui::Button("Dodaj sciane")) {
@@ -473,10 +484,16 @@ void SandboxLayer::OnImGuiRender()
 
 	if (addObstacle) {
 		ImGui::SliderFloat2("Size: ", &newObstaclePos.x, 0.0f, 15.0f);
-
+		
+		ImGui::ColorEdit4("Color:", ClearColor,ImGuiColorEditFlags_AlphaBar);
 		if (ImGui::Button("Stworz")) {
 			addObstacle = !addObstacle;
-			m_Obstacle.push_back(Obstacle({ 0.0f,0.0f }, { newObstaclePos.x,0.0f }, { newObstaclePos.x,newObstaclePos.y }, { 0.0f,newObstaclePos.y }, { 0.0f,1.0f,1.0f,1.0f }, true));
+			glm::vec4 ColorIn2;
+				ColorIn2.x= ClearColor[0];
+				ColorIn2.y= ClearColor[1];
+				ColorIn2.z= ClearColor[2];
+				ColorIn2.w = ClearColor[3];
+			m_Obstacle.push_back(Obstacle({ 0.0f,0.0f }, { newObstaclePos.x,0.0f }, { newObstaclePos.x,newObstaclePos.y }, { 0.0f,newObstaclePos.y }, ColorIn2, true));
 
 			newObstaclePos = { 0.0f, 0.0f };
 		}

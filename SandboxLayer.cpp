@@ -4,7 +4,7 @@
 #include "GLCore/Core/KeyCodes.h"
 using namespace GLCore;
 using namespace GLCore::Utils;
-const size_t NumsofParticles = 100;
+const size_t NumsofParticles = 10;
 const size_t MaxParticleVertexCount = NumsofParticles * 4;
 const size_t MaxParticleIndexCount = NumsofParticles * 6;
 const float BaseSize = 1.5f;
@@ -61,8 +61,8 @@ void SandboxLayer::OnAttach()
 	);
 	glUseProgram(m_Shader->GetRendererID());
 	auto loc = glGetUniformLocation(m_Shader->GetRendererID(), "u_Textures");
-	int samplers[3] = { 0,1,2 };
-	glUniform1iv(loc, 3, samplers);
+	int samplers[5] = { 0,1,2,3,4 };
+	glUniform1iv(loc, 5, samplers);
 
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
@@ -238,8 +238,10 @@ void SandboxLayer::OnAttach()
 	// Init here
 
 	m_txt1 = LoadTexture("assets/textures/wb.png");
-	m_txt2 = LoadTexture("assets/textures/wb.png");
-	m_txt3 = LoadTexture("assets/textures/wb.png");
+	m_txt2 = LoadTexture("assets/textures/bb.png");
+	m_txt3 = LoadTexture("assets/textures/gb.png");
+	m_txt4 = LoadTexture("assets/textures/rb.png");
+	m_txt5 = LoadTexture("assets/textures/yb.png");
 	m_CameraController.SetZoomLevel(0.0f);
 
 
@@ -282,7 +284,7 @@ static oVertex* CreateLine(oVertex* target)
 	//target->Position = { botL.x,botL.y,0.0f };//15 15
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
 	target->TexCoords = { 0.0f,0.0f };
-	target->TexID = { 2.0f };
+	target->TexID = { 5.0f };
 	float startx = target->Position.x;
 	float starty = target->Position.y;
 	++target;
@@ -291,26 +293,26 @@ static oVertex* CreateLine(oVertex* target)
 	//target->Position = { botR.x,botR.y,0.0f };//15 15
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
 	target->TexCoords = { 0.0f,0.0f };
-	target->TexID = { 2.0f };
+	target->TexID = { 5.0f };
 	++target;
 
 	//target->Position = { topR.x,topR.y,0.0f };//15 15
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
 	target->TexCoords = { 0.0f,0.0f };
-	target->TexID = { 2.0f };
+	target->TexID = { 5.0f };
 	++target;
 
 	//target->Position = { topL.x,topL.y,0.0f};//15 15
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
 	target->TexCoords = { 0.0f,0.0f };
-	target->TexID = { 2.0f };
+	target->TexID = { 5.0f };
 	++target;
 
 
 	target->Position = { startx,starty,0.0f };//15 15
 	target->Color = { 1.0f,0.0f,0.0f,1.0f };
 	target->TexCoords = { 0.0f,0.0f };
-	target->TexID = { 2.0f };
+	target->TexID = { 5.0f };
 	++target;
 	return target;
 }
@@ -366,6 +368,8 @@ void SandboxLayer::OnUpdate(Timestep ts)
 	glBindTextureUnit(0, m_txt1);
 	glBindTextureUnit(1, m_txt2);
 	glBindTextureUnit(2, m_txt3);
+	glBindTextureUnit(3, m_txt4);
+	glBindTextureUnit(4, m_txt5);
 
 	auto vp = m_CameraController.GetCamera().GetViewProjectionMatrix();
 	SetUniformMat4(m_Shader->GetRendererID(), "u_ViewProjection", vp);

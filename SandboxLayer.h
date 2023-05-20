@@ -30,7 +30,7 @@ private:
 
 	GLuint m_QuadVA, m_QuadVB, m_QuadIB,
 		m_LineVA, m_LineVB, m_LineIB;
-	GLuint m_txt1, m_txt2,m_txt3;
+	GLuint m_txt1, m_txt2,m_txt3,m_txt4,m_txt5,m_txt6;
 	float m_QuadPosition[2] = {-1.5f,-0.5f};
 	Particle* m_p1 = nullptr;
 	friend class Particle;

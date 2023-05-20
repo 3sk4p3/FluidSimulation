@@ -17,7 +17,10 @@ Particle::Particle(glm::vec2 StartPos, float I_size)
 	m_CurrentPosition.y = m_StartPos.y;
 	m_PreviousPosition = m_CurrentPosition;
 	m_Acceleration = { 0.0f,0.0f };
-	CreateQuad(this, m_StartPos.x, m_StartPos.y, 1.0f, m_Size);
+
+
+
+	CreateQuad(this, m_StartPos.x, m_StartPos.y, 0.0f, m_Size);
 }
 
 Particle::~Particle()
@@ -171,8 +174,8 @@ void Particle::Update(float dt, std::vector<Obstacle>& Obstacles, float angle)
 			m_Acceleration = {};
 		}
 
-
-		CreateQuad(this, m_CurrentPosition.x, m_CurrentPosition.y, 1.0f, m_Size);
+		CreateQuad(this, m_CurrentPosition.x, m_CurrentPosition.y, m_Vertex[0].TexID, m_Size);
+		std::cout << "tex id:\t" << m_Vertex[0].TexID << std::endl;
 	}
 }
 
@@ -182,7 +185,7 @@ void Particle::Reset()
 	m_CurrentPosition.y = m_StartPos.y;
 	m_PreviousPosition = m_CurrentPosition;
 	m_Acceleration = { 0.0f,0.0f };
-	CreateQuad(this, m_StartPos.x, m_StartPos.y, 1.0f, m_Size);
+	CreateQuad(this, m_StartPos.x, m_StartPos.y, 0.0f, m_Size);
 
 
 }
@@ -295,7 +298,18 @@ void SweepAndPrune(std::vector<Particle>& Particles)
 								const float delta = bufSize - dist;
 								Current->m_CurrentPosition += 0.005f * delta * n;
 								Checked->m_CurrentPosition -= 0.005f * delta * n;
+								std::random_device dev;
+								std::mt19937 rng(dev());
+								std::uniform_int_distribution<std::mt19937::result_type> dist4(0, 4);
 
+								Current->m_Vertex[0].TexID = static_cast<float>(dist4(rng));
+								Checked->m_Vertex[0].TexID = static_cast<float>(dist4(rng));
+
+							}
+							else if (dist > 3.0f)
+							{
+								Current->m_Vertex[0].TexID = 0.0f;
+								Checked->m_Vertex[0].TexID = 0.0f;
 							}
 
 

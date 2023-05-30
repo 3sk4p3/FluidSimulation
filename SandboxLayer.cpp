@@ -4,7 +4,7 @@
 #include "GLCore/Core/KeyCodes.h"
 using namespace GLCore;
 using namespace GLCore::Utils;
-const size_t NumsofParticles = 10;
+const size_t NumsofParticles = 500;
 const size_t MaxParticleVertexCount = NumsofParticles * 4;
 const size_t MaxParticleIndexCount = NumsofParticles * 6;
 const float BaseSize = 1.5f;
@@ -379,7 +379,7 @@ void SandboxLayer::OnUpdate(Timestep ts)
 
 	glBindVertexArray(m_QuadVA);
 
-	SweepAndPrune(m_Particles);
+	SweepAndPrune(m_Particles,m_Pigulka);
 	for (auto& i : m_Particles)
 	{
 
@@ -451,8 +451,42 @@ void SandboxLayer::OnUpdate(Timestep ts)
 
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 	}
+	for (size_t i = 0; i < m_Pigulka.size(); ++i)
+	{
+		std::vector<oVertex>my_vertices;
+		my_vertices.resize(5);
+		if (m_Pigulka[i].m_Drag) {
+			float w = m_Pigulka[i].GetWidth();
+			float h = m_Pigulka[i].GetHeight();
 
+			if (LMB)m_Pigulka[i].m_Drag = false;
+			if (RMB)
+			{
+				m_Pigulka[i].SetHeight(w);
+				m_Pigulka[i].SetWidth(h);
+			}
+			m_Pigulka [i] .SetPosition(std::make_pair((CurrentMousePosition.first - 550.0f) / 20.0f, -(CurrentMousePosition.second - 550.0f) / 20.0f));
+		}
 
+		my_vertices[0] = m_Pigulka[i].GetBegVertex()[0];
+		my_vertices[1] = m_Pigulka[i].GetBegVertex()[1];
+		my_vertices[2] = m_Pigulka[i].GetBegVertex()[2];
+		my_vertices[3] = m_Pigulka[i].GetBegVertex()[3];
+		my_vertices[4] = m_Pigulka[i].GetBegVertex()[0];
+		//	oVertex* my_buffer = my_vertces.data();
+			//my_buffer = CreateLine(my_buffer);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, my_vertices.size() * sizeof(oVertex), my_vertices.data());
+		//float my_indices[] =
+		//{
+		//0.0f
+		//};
+		//glCreateBuffers(1, &m_LineIB);
+		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_LineIB);
+		//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float)*4, my_indices, GL_STATIC_DRAW);
+
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	}
+	m_Pigulka.clear();
 }
 
 void SandboxLayer::OnImGuiRender()

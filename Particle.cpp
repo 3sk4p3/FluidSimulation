@@ -175,7 +175,6 @@ void Particle::Update(float dt, std::vector<Obstacle>& Obstacles, float angle)
 		}
 
 		CreateQuad(this, m_CurrentPosition.x, m_CurrentPosition.y, m_Vertex[0].TexID, m_Size);
-		std::cout << "tex id:\t" << m_Vertex[0].TexID << std::endl;
 	}
 }
 
@@ -198,7 +197,7 @@ void Particle::Reset()
 
 
 
-void SweepAndPrune(std::vector<Particle>& Particles)
+void SweepAndPrune(std::vector<Particle>& Particles,  std::vector<Obstacle>& Pigulki)
 {
 
 	//for (size_t i = 0; i < Particles.size()-1; ++i)
@@ -302,12 +301,24 @@ void SweepAndPrune(std::vector<Particle>& Particles)
 								std::mt19937 rng(dev());
 								std::uniform_int_distribution<std::mt19937::result_type> dist4(0, 4);
 
-								Current->m_Vertex[0].TexID = static_cast<float>(dist4(rng));
-								Checked->m_Vertex[0].TexID = static_cast<float>(dist4(rng));
+								//Current->m_Vertex[0].TexID = static_cast<float>(dist4(rng));
+								//Checked->m_Vertex[0].TexID = static_cast<float>(dist4(rng));
 
 							}
-							else if (dist > 3.0f)
+							else if (dist < 2.0f*bufSize)
 							{
+								glm::vec2 p1 = Current->m_CurrentPosition+Current->m_Size/2.0f;
+								glm::vec2 p2 = Checked->m_CurrentPosition + Current->m_Size / 2.0f;
+								
+								float angle = atan2f(p2.y - p1.y, p2.x - p1.x) *180.0f/M_PI;
+								float x1, y1;
+								x1 = Current->m_Size / 2 * cos(angle);
+								y1 = Current->m_Size / 2 * sin(angle);
+								glm::vec2 BL{ x1 + p1.x,y1 + p1.y};
+								glm::vec2 BR{ -x1 + p1.x,-y1 + p1.y};
+								glm::vec2 TR{ -x1 + p2.x,-y1 + p2.y};
+								glm::vec2 TL{ x1 + p2.x,y1 + p2.y };
+								Pigulki.push_back(Obstacle(BL, BR, TR, TL, {1.0f,1.0f,1.0f,1.0f}, 0));
 								Current->m_Vertex[0].TexID = 0.0f;
 								Checked->m_Vertex[0].TexID = 0.0f;
 							}

@@ -22,6 +22,7 @@ public:
 private:
 	std::vector <Particle>m_Particles;
 	std::vector <Obstacle>m_Obstacle;
+	std::vector <Obstacle>m_Pigulka;
 
 
 	GLCore::Utils::Shader* m_Shader;

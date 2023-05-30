@@ -66,7 +66,7 @@ public:
 
 private:
 	friend  void CreateQuad(Particle* target, float x, float y, float textureID, float size);
-	friend void SweepAndPrune(std::vector<Particle>& Particles);
+	friend void SweepAndPrune(std::vector<Particle>& Particles,std::vector<Obstacle>&Pigulki);
 	friend  double  Direction(Particle& p1, Particle& p2);
 	//friend std::vector<std::pair<int, Particle>>SweepAndPruneColisionHandler(std::vector<std::vector<Particle>>Particles);
 
